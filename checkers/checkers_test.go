@@ -13,18 +13,18 @@ func TestNew(t *testing.T) {
 	if c.Pieces == nil {
 		t.Errorf("expected pieces to be non-nil")
 	}
-	if c.Winner() != NO_PLAYER {
+	if c.Winner() != NoPlayer {
 		t.Errorf("expected winner to be no-player")
 	}
-	if !c.TurnIs(BLACK_PLAYER) {
+	if !c.TurnIs(BlackPlayer) {
 		t.Errorf("expected starting turn to be black")
 	}
 	// Confirm pieces are all at starting positions
 	for pos := range Usable {
-		if (pos.Y >= 0 && pos.Y < 3) && (!c.PieceAt(pos) || c.Pieces[pos].Player != BLACK_PLAYER) {
+		if (pos.Y >= 0 && pos.Y < 3) && (!c.PieceAt(pos) || c.Pieces[pos].Player != BlackPlayer) {
 			t.Errorf("expected black piece at %v", pos)
 		}
-		if (pos.Y >= BOARD_DIM-3 && pos.Y < BOARD_DIM) && (!c.PieceAt(pos) || c.Pieces[pos].Player != RED_PLAYER) {
+		if (pos.Y >= BoardDim-3 && pos.Y < BoardDim) && (!c.PieceAt(pos) || c.Pieces[pos].Player != RedPlayer) {
 			t.Errorf("expected red piece at %v", pos)
 		}
 	}
@@ -33,7 +33,7 @@ func TestNew(t *testing.T) {
 func TestWinner(t *testing.T) {
 	// Test no initial winner (assumes correct game setup)
 	game := New()
-	if game.Winner() != NO_PLAYER {
+	if game.Winner() != NoPlayer {
 		t.Errorf("expected no initial game winner")
 	}
 	// Test winner is unaffected after removing a piece
@@ -41,33 +41,33 @@ func TestWinner(t *testing.T) {
 		delete(game.Pieces, pos)
 		break // Only delete one
 	}
-	if game.Winner() != NO_PLAYER {
+	if game.Winner() != NoPlayer {
 		t.Errorf("expected no winner after removal of a piece")
 	}
 	// Test removing all red makes black win
 	for pos, piece := range game.Pieces {
-		if piece.Player == RED_PLAYER {
+		if piece.Player == RedPlayer {
 			delete(game.Pieces, pos)
 		}
 	}
-	if game.Winner() != BLACK_PLAYER {
+	if game.Winner() != BlackPlayer {
 		t.Errorf("expected black to win with no red pieces")
 	}
 	// Test removing all pieces yields no winner
 	for pos := range game.Pieces {
 		delete(game.Pieces, pos)
 	}
-	if game.Winner() != NO_PLAYER {
+	if game.Winner() != NoPlayer {
 		t.Errorf("expected no winner with an empty board")
 	}
 	// Try again removing all black
 	game = New()
 	for pos, piece := range game.Pieces {
-		if piece.Player == BLACK_PLAYER {
+		if piece.Player == BlackPlayer {
 			delete(game.Pieces, pos)
 		}
 	}
-	if game.Winner() != RED_PLAYER {
+	if game.Winner() != RedPlayer {
 		t.Errorf("expected red to win with no black pieces")
 	}
 }
@@ -95,7 +95,7 @@ func TestValidMove(t *testing.T) {
 	}
 	src = Pos{1, 4}
 	dst = Pos{2, 3}
-	game.Pieces[src] = Piece{Player: BLACK_PLAYER, King: true}
+	game.Pieces[src] = Piece{Player: BlackPlayer, King: true}
 	if !game.ValidMove(src, dst) {
 		t.Errorf("expected %v to %v to be valid, kings can move backwards", src, dst)
 	}
@@ -109,12 +109,12 @@ func TestValidJump(t *testing.T) {
 	if game.ValidJump(src, dst) {
 		t.Errorf("expected jump %v to %v to be invalid, no piece to jump", src, dst)
 	}
-	capturePiece := Piece{Player: RED_PLAYER, King: false}
+	capturePiece := Piece{Player: RedPlayer, King: false}
 	game.Pieces[capLoc] = capturePiece
 	if !game.ValidJump(src, dst) {
 		t.Errorf("expected jump %v to %v to be valid", src, dst)
 	}
-	capturePiece.Player = BLACK_PLAYER
+	capturePiece.Player = BlackPlayer
 	game.Pieces[capLoc] = capturePiece
 	if game.ValidJump(src, dst) {
 		t.Errorf("expected jump %v to %v to be invalid, can't jump own piece", src, dst)
@@ -123,7 +123,7 @@ func TestValidJump(t *testing.T) {
 	delete(game.Pieces, src)
 	jumpPiece.King = true
 	game.Pieces[dst] = jumpPiece
-	capturePiece.Player = RED_PLAYER
+	capturePiece.Player = RedPlayer
 	game.Pieces[capLoc] = capturePiece
 	tmp := src
 	src = dst
@@ -131,7 +131,7 @@ func TestValidJump(t *testing.T) {
 	if !game.ValidJump(src, dst) {
 		t.Errorf("expected jump %v to %v to be valid, kings can jump backwards", src, dst)
 	}
-	capturePiece.Player = BLACK_PLAYER
+	capturePiece.Player = BlackPlayer
 	game.Pieces[capLoc] = capturePiece
 	if game.ValidJump(src, dst) {
 		t.Errorf("expected jump %v to %v to be invalid, can't jump own piece", src, dst)
@@ -156,7 +156,7 @@ func TestJump(t *testing.T) {
 	src := Pos{3, 2}
 	dst := Pos{5, 4}
 	capLoc := Capture(src, dst)
-	game.Pieces[capLoc] = Piece{Player: RED_PLAYER, King: false}
+	game.Pieces[capLoc] = Piece{Player: RedPlayer, King: false}
 	_, err := game.Move(src, dst)
 	if err != nil {
 		t.Errorf("expected move to return no failure: %v", err)
@@ -171,7 +171,7 @@ func TestInvalidJump(t *testing.T) {
 	src := Pos{3, 2}
 	dst := Pos{5, 4}
 	capLoc := Capture(src, dst)
-	game.Pieces[capLoc] = Piece{Player: BLACK_PLAYER, King: false}
+	game.Pieces[capLoc] = Piece{Player: BlackPlayer, King: false}
 	_, err := game.Move(src, dst)
 	if err == nil {
 		t.Errorf("expected jump to fail with error")
@@ -216,7 +216,7 @@ func TestJumpPossibleFrom(t *testing.T) {
 	if game.jumpPossibleFrom(src) {
 		t.Errorf("expected no jump possible from %v", src)
 	}
-	game.Pieces[Pos{2, 3}] = Piece{RED_PLAYER, false}
+	game.Pieces[Pos{2, 3}] = Piece{RedPlayer, false}
 	if !game.jumpPossibleFrom(src) {
 		t.Errorf("expected possible jump from %v", src)
 	}
@@ -225,11 +225,11 @@ func TestJumpPossibleFrom(t *testing.T) {
 func TestJumpPossibleFromKing(t *testing.T) {
 	game := New()
 	src := Pos{2, 5}
-	game.Pieces[src] = Piece{BLACK_PLAYER, true}
+	game.Pieces[src] = Piece{BlackPlayer, true}
 	if game.jumpPossibleFrom(src) {
 		t.Errorf("expected no jump possible for king from %v", src)
 	}
-	game.Pieces[Pos{3, 4}] = Piece{RED_PLAYER, false}
+	game.Pieces[Pos{3, 4}] = Piece{RedPlayer, false}
 	if !game.jumpPossibleFrom(src) {
 		t.Errorf("expected possible jump for king from %v", src)
 	}
@@ -240,13 +240,13 @@ func TestPlayerHasMove(t *testing.T) {
 	for loc := range game.Pieces {
 		delete(game.Pieces, loc)
 	}
-	game.Pieces[Pos{0, 3}] = Piece{BLACK_PLAYER, false}
-	game.Pieces[Pos{1, 4}] = Piece{RED_PLAYER, false}
-	game.Pieces[Pos{2, 5}] = Piece{RED_PLAYER, false}
-	if game.playerHasMove(BLACK_PLAYER) {
+	game.Pieces[Pos{0, 3}] = Piece{BlackPlayer, false}
+	game.Pieces[Pos{1, 4}] = Piece{RedPlayer, false}
+	game.Pieces[Pos{2, 5}] = Piece{RedPlayer, false}
+	if game.playerHasMove(BlackPlayer) {
 		t.Errorf("expected red player to have no move")
 	}
-	if !game.playerHasMove(RED_PLAYER) {
+	if !game.playerHasMove(RedPlayer) {
 		t.Errorf("expected black player to have a move")
 	}
 }
@@ -259,10 +259,10 @@ func TestMovePossibleFrom(t *testing.T) {
 	blockedSrc := Pos{0, 3}
 	okSrc := Pos{1, 4}
 	okKingSrc := Pos{2, 5}
-	game.Pieces[blockedSrc] = Piece{BLACK_PLAYER, false}
-	game.Pieces[okSrc] = Piece{RED_PLAYER, false}
-	game.Pieces[okKingSrc] = Piece{RED_PLAYER, true}
-	game.Pieces[Pos{3, 4}] = Piece{RED_PLAYER, false}
+	game.Pieces[blockedSrc] = Piece{BlackPlayer, false}
+	game.Pieces[okSrc] = Piece{RedPlayer, false}
+	game.Pieces[okKingSrc] = Piece{RedPlayer, true}
+	game.Pieces[Pos{3, 4}] = Piece{RedPlayer, false}
 	if game.movePossibleFrom(blockedSrc) {
 		t.Errorf("expected no possible move from %v", blockedSrc)
 	}
@@ -280,13 +280,13 @@ func TestUpdateTurnNormalMove(t *testing.T) {
 	src := Pos{3, 2}
 	dst := Pos{4, 3}
 	game.Move(src, dst)
-	if origTurn == game.Turn || game.Turn != RED_PLAYER {
+	if origTurn == game.Turn || game.Turn != RedPlayer {
 		t.Errorf("expected turn to change from black to red after move from %v to %v", src, dst)
 	}
 	src = Pos{2, 5}
 	dst = Pos{3, 4}
 	game.Move(src, dst)
-	if origTurn != game.Turn || game.Turn != BLACK_PLAYER {
+	if origTurn != game.Turn || game.Turn != BlackPlayer {
 		t.Errorf("expected turn to change from red to black after move from %v to %v", src, dst)
 	}
 }
@@ -294,17 +294,17 @@ func TestUpdateTurnNormalMove(t *testing.T) {
 func TestUpdateTurnNormalJump(t *testing.T) {
 	game := New()
 	origTurn := game.Turn
-	game.Pieces[Pos{2, 3}] = Piece{RED_PLAYER, false}
+	game.Pieces[Pos{2, 3}] = Piece{RedPlayer, false}
 	src := Pos{3, 2}
 	dst := Pos{1, 4}
 	game.Move(src, dst)
-	if origTurn == game.Turn || game.Turn != RED_PLAYER {
+	if origTurn == game.Turn || game.Turn != RedPlayer {
 		t.Errorf("expected turn to change from black to red after jump from %v to %v", src, dst)
 	}
 	src = Pos{0, 5}
 	dst = Pos{2, 3}
 	game.Move(src, dst)
-	if origTurn != game.Turn || game.Turn != BLACK_PLAYER {
+	if origTurn != game.Turn || game.Turn != BlackPlayer {
 		t.Errorf("expected turn to change from black to red after jump from %v to %v", src, dst)
 	}
 }
@@ -312,25 +312,25 @@ func TestUpdateTurnNormalJump(t *testing.T) {
 func TestUpdateTurnJumpContinuation(t *testing.T) {
 	game := New()
 	origTurn := game.Turn
-	game.Pieces[Pos{2, 3}] = Piece{RED_PLAYER, false}
+	game.Pieces[Pos{2, 3}] = Piece{RedPlayer, false}
 	delete(game.Pieces, Pos{3, 6})
 	src := Pos{3, 2}
 	dst := Pos{1, 4}
 	game.Move(src, dst)
-	if origTurn != game.Turn || game.Turn != BLACK_PLAYER {
+	if origTurn != game.Turn || game.Turn != BlackPlayer {
 		t.Errorf("expected no turn change after jump from %v to %v", src, dst)
 	}
 	src = Pos{1, 4}
 	dst = Pos{3, 6}
 	game.Move(src, dst)
-	if origTurn == game.Turn || game.Turn != RED_PLAYER {
+	if origTurn == game.Turn || game.Turn != RedPlayer {
 		t.Errorf("expected turn to change from black to red after jump from %v to %v", src, dst)
 	}
 }
 
 func TestUpdateTurnNoMove(t *testing.T) {
 	game := New()
-	game.Turn = RED_PLAYER
+	game.Turn = RedPlayer
 	for loc := range game.Pieces {
 		delete(game.Pieces, loc)
 	}
@@ -338,15 +338,15 @@ func TestUpdateTurnNoMove(t *testing.T) {
 	redSrc := Pos{0, 5}
 	blockLoc := Pos{1, 4}
 	unblockLoc := Pos{2, 3}
-	game.Pieces[blkSrc] = Piece{BLACK_PLAYER, false}
-	game.Pieces[redSrc] = Piece{RED_PLAYER, false}
-	game.Pieces[Pos{2, 5}] = Piece{RED_PLAYER, false}
+	game.Pieces[blkSrc] = Piece{BlackPlayer, false}
+	game.Pieces[redSrc] = Piece{RedPlayer, false}
+	game.Pieces[Pos{2, 5}] = Piece{RedPlayer, false}
 	game.Move(redSrc, blockLoc)
-	if game.Turn != RED_PLAYER {
+	if game.Turn != RedPlayer {
 		t.Errorf("expected turn to remain on red since black has no move")
 	}
 	game.Move(blockLoc, unblockLoc)
-	if game.Turn != BLACK_PLAYER {
+	if game.Turn != BlackPlayer {
 		t.Errorf("expected turn to change since black now has move")
 	}
 }
@@ -358,11 +358,11 @@ func TestUpdateTurnNoKingJumpContinuation(t *testing.T) {
 	}
 	src := Pos{4, 5}
 	dst := Pos{2, 7} // dst2 := Pos{0, 5}
-	game.Pieces[Pos{3, 6}] = Piece{RED_PLAYER, false}
-	game.Pieces[Pos{1, 6}] = Piece{RED_PLAYER, false}
-	game.Pieces[src] = Piece{BLACK_PLAYER, false}
+	game.Pieces[Pos{3, 6}] = Piece{RedPlayer, false}
+	game.Pieces[Pos{1, 6}] = Piece{RedPlayer, false}
+	game.Pieces[src] = Piece{BlackPlayer, false}
 	game.Move(src, dst)
-	if game.Turn != RED_PLAYER {
+	if game.Turn != RedPlayer {
 		t.Errorf("expected turn to be red: new kings can't continue to jump")
 	}
 }
@@ -375,16 +375,16 @@ func TestUpdateTurnKingJumpContinuation(t *testing.T) {
 	src := Pos{4, 5}
 	dst1 := Pos{2, 7}
 	dst2 := Pos{0, 5}
-	game.Pieces[Pos{3, 6}] = Piece{RED_PLAYER, false}
-	game.Pieces[Pos{1, 6}] = Piece{RED_PLAYER, false}
-	game.Pieces[Pos{7, 6}] = Piece{RED_PLAYER, false}
-	game.Pieces[src] = Piece{BLACK_PLAYER, true}
+	game.Pieces[Pos{3, 6}] = Piece{RedPlayer, false}
+	game.Pieces[Pos{1, 6}] = Piece{RedPlayer, false}
+	game.Pieces[Pos{7, 6}] = Piece{RedPlayer, false}
+	game.Pieces[src] = Piece{BlackPlayer, true}
 	game.Move(src, dst1)
-	if game.Turn == RED_PLAYER {
+	if game.Turn == RedPlayer {
 		t.Errorf("expected turn to be black: non-new kings can continue to jump")
 	}
 	game.Move(dst1, dst2)
-	if game.Turn != RED_PLAYER {
+	if game.Turn != RedPlayer {
 		t.Errorf("expected turn to be red, king jump continuation is over")
 	}
 }
@@ -397,10 +397,10 @@ func TestMustJump(t *testing.T) {
 	noJmpPos, jmpPos := Pos{1, 2}, Pos{3, 2}
 	jumpedPos := Pos{4, 3}
 	dstPos := Pos{0, 3}
-	game.Pieces[noJmpPos], game.Pieces[jmpPos] = Piece{BLACK_PLAYER, false}, Piece{BLACK_PLAYER, false}
-	game.Pieces[jumpedPos] = Piece{RED_PLAYER, false}
+	game.Pieces[noJmpPos], game.Pieces[jmpPos] = Piece{BlackPlayer, false}, Piece{BlackPlayer, false}
+	game.Pieces[jumpedPos] = Piece{RedPlayer, false}
 	capture, err := game.Move(noJmpPos, dstPos)
-	if err == nil || game.Turn == RED_PLAYER || capture != NO_POS {
+	if err == nil || game.Turn == RedPlayer || capture != NoPos {
 		t.Error("should not allow non-jump when a jump is possible")
 	}
 }
@@ -413,8 +413,8 @@ func TestString(t *testing.T) {
 		t.Errorf("expected %v, got %v", expected, actual)
 	}
 	expected = "*B*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*R|r*r*r*r*"
-	game.Pieces[Pos{1, 0}] = Piece{BLACK_PLAYER, true}
-	game.Pieces[Pos{7, 6}] = Piece{RED_PLAYER, true}
+	game.Pieces[Pos{1, 0}] = Piece{BlackPlayer, true}
+	game.Pieces[Pos{7, 6}] = Piece{RedPlayer, true}
 	actual = game.String()
 	if actual != expected {
 		t.Errorf("expected %v, got %v", expected, actual)

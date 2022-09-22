@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/batkinson/checkers-go/checkers"
+	"github.com/tkxkd0159/cosmos-dummy/checkers"
 	"log"
 	"math/rand"
 	"net"
@@ -25,14 +25,14 @@ func main() {
 		log.Fatal(err)
 	}
 	serverMessages := make(chan ClientMessage, 4096)
-	go serviceMessages((<-chan ClientMessage)(serverMessages))
+	go serviceMessages(serverMessages)
 	for {
 		conn, err := lnr.Accept()
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		go serviceConnection(conn, chan<- ClientMessage(serverMessages))
+		go serviceConnection(conn, serverMessages)
 	}
 }
 
@@ -69,7 +69,7 @@ func (game *Game) TurnIs(client *Client) bool {
 }
 
 func (game *Game) HasWinner() bool {
-	return game.GameState.Winner() != checkers.NO_PLAYER
+	return game.GameState.Winner() != checkers.NoPlayer
 }
 
 func (game *Game) Winner() string {
@@ -328,18 +328,18 @@ func quit(client *Client, args ...string) error {
 
 func createPos(coords []string) (src, dst checkers.Pos, err error) {
 	if len(coords) != 4 {
-		return checkers.NO_POS, checkers.NO_POS, errors.New("invalid positions, expected SRCX SRCY DSTX DSTY")
+		return checkers.NoPos, checkers.NoPos, errors.New("invalid positions, expected SRCX SRCY DSTX DSTY")
 	}
 	converted := make([]int, len(coords))
 	for i, val := range coords {
 		parsed, badVal := strconv.ParseInt(val, 0, 0)
 		if badVal != nil {
-			return checkers.NO_POS, checkers.NO_POS, badVal
+			return checkers.NoPos, checkers.NoPos, badVal
 		}
 		converted[i] = int(parsed)
 		i += 1
 	}
-	return checkers.Pos{converted[0], converted[1]}, checkers.Pos{converted[2], converted[3]}, err
+	return checkers.Pos{X: converted[0], Y: converted[1]}, checkers.Pos{X: converted[2], Y: converted[3]}, err
 }
 
 func move(client *Client, args ...string) (err error) {
@@ -351,13 +351,13 @@ func move(client *Client, args ...string) (err error) {
 		}
 		if game.TurnIs(client) {
 			wasKing := game.GameState.Pieces[src].King
-			cap, mvErr := game.GameState.Move(src, dst)
+			capPos, mvErr := game.GameState.Move(src, dst)
 			if mvErr != nil {
 				err = mvErr
 			} else {
 				game.Broadcast(fmt.Sprintf("STATUS MOVED %v %v %v %v", src.X, src.Y, dst.X, dst.Y))
-				if cap != checkers.NO_POS {
-					game.Broadcast(fmt.Sprintf("STATUS CAPTURED %v %v", cap.X, cap.Y))
+				if capPos != checkers.NoPos {
+					game.Broadcast(fmt.Sprintf("STATUS CAPTURED %v %v", capPos.X, capPos.Y))
 				}
 				if !wasKing && game.GameState.Pieces[dst].King {
 					game.Broadcast(fmt.Sprintf("STATUS KING %v %v", dst.X, dst.Y))

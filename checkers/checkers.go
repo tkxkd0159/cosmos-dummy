@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	BOARD_DIM = 8
-	RED       = "red"
-	BLACK     = "black"
-	ROW_SEP   = "|"
+	BoardDim = 8
+	RED      = "red"
+	BLACK    = "black"
+	RowSep   = "|"
 )
 
 type Player struct {
@@ -24,19 +24,19 @@ type Piece struct {
 }
 
 var PieceStrings = map[Player]string{
-	RED_PLAYER:   "r",
-	BLACK_PLAYER: "b",
-	NO_PLAYER:    "*",
+	RedPlayer:   "r",
+	BlackPlayer: "b",
+	NoPlayer:    "*",
 }
 
-var NO_PIECE = Piece{NO_PLAYER, false}
+var NoPiece = Piece{NoPlayer, false}
 
 var StringPieces = map[string]Piece{
-	"r": Piece{RED_PLAYER, false},
-	"b": Piece{BLACK_PLAYER, false},
-	"R": Piece{RED_PLAYER, true},
-	"B": Piece{BLACK_PLAYER, true},
-	"*": NO_PIECE,
+	"r": {RedPlayer, false},
+	"b": {BlackPlayer, false},
+	"R": {RedPlayer, true},
+	"B": {BlackPlayer, true},
+	"*": NoPiece,
 }
 
 type Pos struct {
@@ -44,22 +44,22 @@ type Pos struct {
 	Y int
 }
 
-var NO_POS = Pos{-1, -1}
+var NoPos = Pos{-1, -1}
 
-var BLACK_PLAYER = Player{BLACK}
-var RED_PLAYER = Player{RED}
-var NO_PLAYER = Player{
+var BlackPlayer = Player{BLACK}
+var RedPlayer = Player{RED}
+var NoPlayer = Player{
 	Color: "NO_PLAYER",
 }
 
 var Players = map[string]Player{
-	RED:   RED_PLAYER,
-	BLACK: BLACK_PLAYER,
+	RED:   RedPlayer,
+	BLACK: BlackPlayer,
 }
 
 var Opponents = map[Player]Player{
-	BLACK_PLAYER: RED_PLAYER,
-	RED_PLAYER:   BLACK_PLAYER,
+	BlackPlayer: RedPlayer,
+	RedPlayer:   BlackPlayer,
 }
 
 var Usable = map[Pos]bool{}
@@ -72,11 +72,12 @@ func Capture(src, dst Pos) Pos {
 	return Pos{(src.X + dst.X) / 2, (src.Y + dst.Y) / 2}
 }
 
+// init is an initialization logic for state machine before receive any requests from Tendermint Core
 func init() {
 
 	// Initialize usable spaces
-	for y := 0; y < BOARD_DIM; y++ {
-		for x := (y + 1) % 2; x < BOARD_DIM; x += 2 {
+	for y := 0; y < BoardDim; y++ {
+		for x := (y + 1) % 2; x < BoardDim; x += 2 {
 			Usable[Pos{X: x, Y: y}] = true
 		}
 	}
@@ -92,7 +93,7 @@ func init() {
 		KingMoves[pos] = map[Pos]bool{}
 		KingJumps[pos] = map[Pos]Pos{}
 		var directions = []int{1, -1}
-		for i, player := range []Player{BLACK_PLAYER, RED_PLAYER} {
+		for i, player := range []Player{BlackPlayer, RedPlayer} {
 			Moves[player][pos] = map[Pos]bool{}
 			Jumps[player][pos] = map[Pos]Pos{}
 			movOff := 1
@@ -121,7 +122,7 @@ type Game struct {
 
 func New() *Game {
 	pieces := make(map[Pos]Piece)
-	game := &Game{pieces, BLACK_PLAYER}
+	game := &Game{pieces, BlackPlayer}
 	game.addInitialPieces()
 	return game
 }
@@ -129,10 +130,10 @@ func New() *Game {
 func (game *Game) addInitialPieces() {
 	for pos := range Usable {
 		if pos.Y >= 0 && pos.Y < 3 {
-			game.Pieces[pos] = Piece{BLACK_PLAYER, false}
+			game.Pieces[pos] = Piece{BlackPlayer, false}
 		}
-		if pos.Y >= BOARD_DIM-3 && pos.Y < BOARD_DIM {
-			game.Pieces[pos] = Piece{RED_PLAYER, false}
+		if pos.Y >= BoardDim-3 && pos.Y < BoardDim {
+			game.Pieces[pos] = Piece{RedPlayer, false}
 		}
 	}
 }
@@ -147,24 +148,25 @@ func (game *Game) TurnIs(player Player) bool {
 }
 
 func (game *Game) Winner() Player {
-	red_count := 0
-	black_count := 0
+	redCount := 0
+	blackCount := 0
 	for _, piece := range game.Pieces {
 		switch {
-		case piece.Player == BLACK_PLAYER:
-			black_count += 1
-		case piece.Player == RED_PLAYER:
-			red_count += 1
+		case piece.Player == BlackPlayer:
+			blackCount += 1
+		case piece.Player == RedPlayer:
+			redCount += 1
 		}
 	}
-	if black_count > 0 && red_count <= 0 {
-		return BLACK_PLAYER
-	} else if red_count > 0 && black_count <= 0 {
-		return RED_PLAYER
+	if blackCount > 0 && redCount <= 0 {
+		return BlackPlayer
+	} else if redCount > 0 && blackCount <= 0 {
+		return RedPlayer
 	}
-	return NO_PLAYER
+	return NoPlayer
 }
 
+// ValidMove acts like a CheckTx
 func (game *Game) ValidMove(src, dst Pos) bool {
 	if !game.PieceAt(src) || game.PieceAt(dst) {
 		return false
@@ -195,8 +197,8 @@ func (game *Game) kingPiece(dst Pos) {
 		return
 	}
 	piece := game.Pieces[dst]
-	if (dst.Y == 0 && piece.Player == RED_PLAYER) ||
-		(dst.Y == BOARD_DIM-1 && piece.Player == BLACK_PLAYER) {
+	if (dst.Y == 0 && piece.Player == RedPlayer) ||
+		(dst.Y == BoardDim-1 && piece.Player == BlackPlayer) {
 		piece.King = true
 		game.Pieces[dst] = piece
 	}
@@ -271,20 +273,21 @@ func (game *Game) playerHasJump(player Player) bool {
 	return false
 }
 
+// Move acts like a DeliverTx
 func (game *Game) Move(src, dst Pos) (captured Pos, err error) {
-	captured = NO_POS
+	captured = NoPos
 	err = nil
 	if !game.PieceAt(src) {
-		return NO_POS, errors.New(fmt.Sprintf("No piece at source position: %v", src))
+		return NoPos, errors.New(fmt.Sprintf("No piece at source position: %v", src))
 	}
 	if game.PieceAt(dst) {
-		return NO_POS, errors.New(fmt.Sprintf("Already piece at destination position: %v", dst))
+		return NoPos, errors.New(fmt.Sprintf("Already piece at destination position: %v", dst))
 	}
 	if !game.TurnIs(game.Pieces[src].Player) {
-		return NO_POS, errors.New(fmt.Sprintf("Not %v's turn", game.Pieces[src].Player))
+		return NoPos, errors.New(fmt.Sprintf("Not %v's turn", game.Pieces[src].Player))
 	}
 	if !game.ValidMove(src, dst) {
-		return NO_POS, errors.New(fmt.Sprintf("Invalid move: %v to %v", src, dst))
+		return NoPos, errors.New(fmt.Sprintf("Invalid move: %v to %v", src, dst))
 	}
 	if game.ValidJump(src, dst) {
 		game.Pieces[dst] = game.Pieces[src]
@@ -295,15 +298,17 @@ func (game *Game) Move(src, dst Pos) (captured Pos, err error) {
 		game.Pieces[dst] = game.Pieces[src]
 		delete(game.Pieces, src)
 	}
-	game.updateTurn(dst, captured != NO_POS)
+	game.updateTurn(dst, captured != NoPos)
 	game.kingPiece(dst)
 	return
 }
 
+// String is querying the game state. Serialize the board without any effort.
+// It does not save player's Turn
 func (game *Game) String() string {
 	var buf bytes.Buffer
-	for y := 0; y < BOARD_DIM; y++ {
-		for x := 0; x < BOARD_DIM; x++ {
+	for y := 0; y < BoardDim; y++ {
+		for x := 0; x < BoardDim; x++ {
 			pos := Pos{x, y}
 			if game.PieceAt(pos) {
 				piece := game.Pieces[pos]
@@ -313,11 +318,11 @@ func (game *Game) String() string {
 				}
 				buf.WriteString(val)
 			} else {
-				buf.WriteString(PieceStrings[NO_PLAYER])
+				buf.WriteString(PieceStrings[NoPlayer])
 			}
 		}
-		if y < (BOARD_DIM - 1) {
-			buf.WriteString(ROW_SEP)
+		if y < (BoardDim - 1) {
+			buf.WriteString(RowSep)
 		}
 	}
 	return buf.String()
@@ -328,20 +333,21 @@ func ParsePiece(s string) (Piece, bool) {
 	return piece, ok
 }
 
+// Parse re-instantiate the board state out of its serialized form
 func Parse(s string) (*Game, error) {
-	if len(s) != BOARD_DIM*BOARD_DIM+(BOARD_DIM-1) {
+	if len(s) != BoardDim*BoardDim+(BoardDim-1) {
 		return nil, errors.New(fmt.Sprintf("invalid board string: %v", s))
 	}
 	pieces := make(map[Pos]Piece)
-	result := &Game{pieces, BLACK_PLAYER}
-	for y, row := range strings.Split(s, ROW_SEP) {
+	result := &Game{pieces, BlackPlayer}
+	for y, row := range strings.Split(s, RowSep) {
 		for x, c := range strings.Split(row, "") {
-			if x >= BOARD_DIM || y >= BOARD_DIM {
+			if x >= BoardDim || y >= BoardDim {
 				return nil, errors.New(fmt.Sprintf("invalid board, piece out of bounds: %v, %v", x, y))
 			}
 			if piece, ok := ParsePiece(c); !ok {
 				return nil, errors.New(fmt.Sprintf("invalid board, invalid piece at %v, %v", x, y))
-			} else if piece != NO_PIECE {
+			} else if piece != NoPiece {
 				result.Pieces[Pos{x, y}] = piece
 			}
 		}
