@@ -1,0 +1,35 @@
+syntax = "proto3";
+package jsc.checkers;
+
+// this line is used by starport scaffolding # proto/tx/import
+
+option go_package = "jsc/x/checkers/types";
+
+// Msg defines the Msg service.
+service Msg {
+      rpc CreateGame(MsgCreateGame) returns (MsgCreateGameResponse);
+  rpc EndGame(MsgEndGame) returns (MsgEndGameResponse);
+// this line is used by starport scaffolding # proto/tx/rpc
+}
+
+message MsgCreateGame {
+  string creator = 1;
+  string red = 2;
+  string black = 3;
+}
+
+message MsgCreateGameResponse {
+  string idValue = 1;
+}
+
+message MsgEndGame {
+  string creator = 1;
+  string sig = 2;
+}
+
+message MsgEndGameResponse {
+  string res = 1;
+  string hash = 2;
+}
+
+// this line is used by starport scaffolding # proto/tx/message

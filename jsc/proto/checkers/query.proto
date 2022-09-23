@@ -1,0 +1,47 @@
+syntax = "proto3";
+package jsc.checkers;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "checkers/params.proto";
+// this line is used by starport scaffolding # 1
+
+option go_package = "jsc/x/checkers/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/jsc/checkers/params";
+  }
+
+
+// Queries a list of Myq items.
+	rpc Myq(QueryMyqRequest) returns (QueryMyqResponse) {
+		option (google.api.http).get = "/jsc/checkers/myq/{req1}/{req2}";
+	}
+
+// this line is used by starport scaffolding # 2
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryMyqRequest {
+  string req1 = 1;
+  string req2 = 2;
+}
+
+message QueryMyqResponse {
+  string res1 = 1;
+  string res2 = 2;
+}
+
+// this line is used by starport scaffolding # 3
