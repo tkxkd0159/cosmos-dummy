@@ -14,6 +14,8 @@ git clone https://github.com/ignite/cli --depth=1
 cd cli && make install
 ```
 ### Build
+`field`의 경우 <field_name>:<type>으로 설정 가능. `type`생략 시 string으로 설정됨. (e.g. `ignite scaffold message dummy toX:uint toY:uint`)
+)
 ```shell
 # scaffold한 거 overwrite하려면 --clear-cache
 ignite scaffold chain [chain_name] [--address-prefix <string>] # default prefix is "cosmos"
@@ -23,7 +25,6 @@ ignite scaffold query <query_name> [field1] [field2] ... [-r field1,field2,...] 
 # Scaffold an IBC packet in a specific IBC-enabled Cosmos SDK module
 ignite scaffold packet <packet_name> [filed1] [field2] ... [--ack field1,field2] --module <target_module> 
 ignite chain serve # Start a blockchain
-
 ```
 
 # Resources

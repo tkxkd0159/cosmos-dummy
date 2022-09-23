@@ -9,6 +9,8 @@ option go_package = "jsc/x/checkers/types";
 service Msg {
       rpc CreateGame(MsgCreateGame) returns (MsgCreateGameResponse);
   rpc EndGame(MsgEndGame) returns (MsgEndGameResponse);
+  rpc PlayMove(MsgPlayMove) returns (MsgPlayMoveResponse);
+  rpc RejectGame(MsgRejectGame) returns (MsgRejectGameResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -30,6 +32,27 @@ message MsgEndGame {
 message MsgEndGameResponse {
   string res = 1;
   string hash = 2;
+}
+
+message MsgPlayMove {
+  string creator = 1;
+  string idValue = 2;
+  uint64 fromX = 3;
+  uint64 fromY = 4;
+  uint64 toX = 5;
+  uint64 toY = 6;
+}
+
+message MsgPlayMoveResponse {
+  string idValue = 1;
+}
+
+message MsgRejectGame {
+  string creator = 1;
+  string idValue = 2;
+}
+
+message MsgRejectGameResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message

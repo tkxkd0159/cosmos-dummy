@@ -18,6 +18,12 @@ export interface CheckersMsgEndGameResponse {
   hash?: string;
 }
 
+export interface CheckersMsgPlayMoveResponse {
+  idValue?: string;
+}
+
+export type CheckersMsgRejectGameResponse = object;
+
 /**
  * Params defines the parameters for the module.
  */

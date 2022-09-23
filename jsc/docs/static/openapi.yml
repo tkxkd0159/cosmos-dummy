@@ -73388,6 +73388,13 @@ definitions:
         type: string
       hash:
         type: string
+  jsc.checkers.MsgPlayMoveResponse:
+    type: object
+    properties:
+      idValue:
+        type: string
+  jsc.checkers.MsgRejectGameResponse:
+    type: object
   jsc.checkers.Params:
     type: object
     description: Params defines the parameters for the module.
