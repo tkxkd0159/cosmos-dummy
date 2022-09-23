@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/tkxkd0159/cosmos-dummy/checkers"
+	"github.com/tkxkd0159/cosmos-dummy/checkers-mock/checkers"
 	"log"
 	"math/rand"
 	"net"
