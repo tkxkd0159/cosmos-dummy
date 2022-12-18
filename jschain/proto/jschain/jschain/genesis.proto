@@ -1,0 +1,14 @@
+syntax = "proto3";
+package jschain.jschain;
+
+import "gogoproto/gogo.proto";
+import "jschain/jschain/params.proto";
+// this line is used by starport scaffolding # genesis/proto/import
+
+option go_package = "jschain/x/jschain/types";
+
+// GenesisState defines the jschain module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  // this line is used by starport scaffolding # genesis/proto/state
+}

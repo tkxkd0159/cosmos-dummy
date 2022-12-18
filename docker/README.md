@@ -8,8 +8,8 @@ docker run --rm -it -v $(pwd):/checkers -w /checkers checkers_i ignite scaffold 
 # 3000 : GUI for chain, 4500 : token faucet
 
 # Throwaway version
+cd checkers
 docker run --rm -it -v $(pwd):/checkers -w /checkers -p 1317:1317 -p 3000:3000 -p 4500:4500 -p 5000:5000 -p 26657:26657 --name checkers checkers_i ignite chain serve
-
 # Persistent version
 docker create --name checkers -i -v $(pwd):/checkers -w /checkers -p 1317:1317 -p 3000:3000 -p 4500:4500 -p 5000:5000 -p 26657:26657 checkers_i
 docker start checkers
