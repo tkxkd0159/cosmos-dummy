@@ -20,8 +20,22 @@ cd cli && make install
 
 ignite scaffold chain [name] [--address-prefix <string>]  # default prefix is "cosmos"
                                                           # name is go module name                                                        
+
 ignite scaffold module <module_name> [--ibc] [--params p1,p2...] [--dep account,bank...]  --require-registration
-ignite scaffold message <msg_name> [field1] [field2] ... [-r field1,field2,...] --signer <signer_field_name> --module <target_module> 
+
+# Module's message
+# signer field의 경우 설정하지 않으면 creator라는 이름으로 자동 생성
+# -r 플래그는 tx message의 proto response field
+# <name>:[type] 형태로 각 field 정의 가능하고 타입 정의안할 경우 string이 기본
+# supported types : string, bool, int, uint, coin, array.string, array.int, array.uint, array.coin
+ignite scaffold message <msg_name> [field1] [field2] ... [--response field1,field2,...] --signer <signer_field_name> --module <target_module> [--no-simulation]
+
+## ex) implement the logic for storing and interacting with data stored as a list in the blockchain state
+## list가 아닌 singleton 값 저장이나 map 형태로 저장을 원할 경우 single/map으로 변경해서 실행
+ignite scaffold list pool amount:coin tags:array.string height:int
+
+
+# Module's query. Message와 만들어지는 원리 같음
 ignite scaffold query <query_name> [field1] [field2] ... [-r field1,field2,...] --module <target_module>
 
 # Scaffold an IBC packet in a specific IBC-enabled Cosmos SDK module
