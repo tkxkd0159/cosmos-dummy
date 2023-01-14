@@ -1,7 +1,6 @@
 FROM --platform=linux ubuntu:22.04
 ARG BUILDARCH
 
-# Change your versions here
 ENV GO_VERSION=1.19.4
 ENV IGNITE_VERSION=0.25.2
 ENV NODE_VERSION=18.x
@@ -30,8 +29,4 @@ RUN apt-get install -y nodejs
 
 EXPOSE 1317 3000 4500 5000 26657
 
-WORKDIR /checkers
-
-#COPY go.mod /checkers/go.mod
-#RUN go mod download
-#RUN rm /checkers/go.mod
+WORKDIR /app
