@@ -44,6 +44,12 @@ ignite scaffold query <query_name> [field1] [field2] ... [-r field1,field2,...] 
 # Scaffold an IBC packet in a specific IBC-enabled Cosmos SDK module
 ignite scaffold packet <packet_name> [filed1] [field2] ... [--ack field1,field2] --module <target_module> 
 
+# proto 수정 후 업데이트
+# 단, proto 빌드만 다시 하는거므로 기존에 생성되었던 연관 메서드들은 수동으로 수정 필요
+ignite generate proto-go
+```
+
+```shell
 # 개발용. config.yml 조절을 통해 초기 상태를 제어할 수 있음
 # <name>d로 go install 
 ignite chain init  # production에서는 바이너리 직접 빌드 후 init, add-genesis-account, gentx, collect-gentx를 수동으로 진행하는 것을 추천
@@ -52,7 +58,7 @@ ignite chain serve # chain init + start node
                    # Initialize the node with a single validator(first account), Add accounts based on config.yml
 
 # Production
-ignite chain build
+ignite chain build [--skip-proto] [--output dist]
 
 # GUI
 cd vue
