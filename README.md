@@ -16,6 +16,9 @@ cd cli && make install
 `field`의 경우 <field_name>:<type>으로 설정 가능. `type`생략 시 string으로 설정됨. (e.g. `ignite scaffold message dummy toX:uint toY:uint`)
 )
 ```shell
+# 1317 : REST API, 26657 : Tendermint API
+# 3000 : GUI for chain, 4500 : token faucet
+
 # 이미 scaffold한 거 overwrite하려면 각 명령어에 --clear-cache
 
 ignite scaffold chain [name] [--address-prefix <string>]  # default prefix is "cosmos"
@@ -43,8 +46,9 @@ ignite scaffold packet <packet_name> [filed1] [field2] ... [--ack field1,field2]
 
 # 개발용. config.yml 조절을 통해 초기 상태를 제어할 수 있음
 # <name>d로 go install 
-ignite chain init  # production에서는 init, add-genesis-account, gentx, collect-gentx를 수동으로 진행하는 것을 추천
-ignite chain serve # Build proto, install dependencies, compile codes, 
+ignite chain init  # production에서는 바이너리 직접 빌드 후 init, add-genesis-account, gentx, collect-gentx를 수동으로 진행하는 것을 추천
+ignite chain serve # chain init + start node
+                   # Build proto, install dependencies, compile codes, 
                    # Initialize the node with a single validator(first account), Add accounts based on config.yml
 
 # Production
@@ -54,6 +58,11 @@ ignite chain build
 cd vue
 npm install
 npm run dev
+```
+
+## Check
+```shell
+<app>d status 2>&1 | jq
 ```
 
 ## Directory Structure
