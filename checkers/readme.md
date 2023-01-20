@@ -53,6 +53,7 @@ curl https://get.ignite.com/username/checkers@latest! | sudo bash
 # Settings
 ```shell
 ignite scaffold single systemInfo nextId:uint --module checkers --no-message
+ignite scaffold map storedGame board turn black red --index index --module checkers --no-message
 ```
 
 ## Learn more
