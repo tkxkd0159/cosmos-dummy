@@ -80,6 +80,31 @@ func (suite *MsgSrvTestSuite) TestCreate1GameHasSaved() {
 	}, game1)
 }
 
+func (suite *MsgSrvTestSuite) TestCreate1GameEmitted() {
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	suite.msgSrv.CreateGame(suite.ctx, &types.MsgCreateGame{
+		Creator: alice,
+		Black:   bob,
+		Red:     carol,
+	})
+	require.NotNil(suite.T(), ctx)
+	events := sdk.StringifyEvents(ctx.EventManager().ABCIEvents())
+	require.Len(suite.T(), events, 1)
+	require.EqualValues(suite.T(), sdk.StringEvent{
+		Type: "new-game-created",
+		Attributes: []sdk.Attribute{
+			{Key: "creator", Value: alice}, // by suite
+			{Key: "game-index", Value: "1"},
+			{Key: "black", Value: bob},
+			{Key: "red", Value: carol},
+			{Key: "creator", Value: alice}, // by func
+			{Key: "game-index", Value: "2"},
+			{Key: "black", Value: bob},
+			{Key: "red", Value: carol},
+		},
+	}, events[0])
+}
+
 func (suite *MsgSrvTestSuite) TestPlayMove() {
 	playMoveResponse, err := suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
 		Creator:   bob,
@@ -345,4 +370,36 @@ func (suite *MsgSrvTestSuite) TestPlayMove3SavedGame() {
 		Black: bob,
 		Red:   carol,
 	}, game1)
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMove2Emitted() {
+	suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   carol,
+		GameIndex: "1",
+		FromX:     0,
+		FromY:     5,
+		ToX:       1,
+		ToY:       4,
+	})
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	require.NotNil(suite.T(), ctx)
+	events := sdk.StringifyEvents(ctx.EventManager().ABCIEvents())
+	require.Len(suite.T(), events, 2)
+	event := events[0]
+	require.Equal(suite.T(), "move-played", event.Type)
+	require.EqualValues(suite.T(), []sdk.Attribute{
+		{Key: "creator", Value: carol},
+		{Key: "game-index", Value: "1"},
+		{Key: "captured-x", Value: "-1"},
+		{Key: "captured-y", Value: "-1"},
+		{Key: "winner", Value: "*"},
+	}, event.Attributes[5:])
 }
