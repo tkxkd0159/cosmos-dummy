@@ -77,6 +77,9 @@ go test -v checkers/x/checkers/keeper
 
 # 2) reset states & start chain with single node. Reload when update but only reset states at first starting (not for reloading)
 ignite chain serve --reset-once
+
+# 3) recompile proto
+ignite generate proto-go
 ```
 
 ## Learn more
