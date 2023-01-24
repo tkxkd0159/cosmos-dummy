@@ -38,13 +38,13 @@ func (suite *MsgSrvTestSuite) SetupTest() {
 	suite.k = *k
 	suite.msgSrv = keeper.NewMsgServerImpl(*k)
 	suite.ctx = sdk.WrapSDKContext(ctx)
-}
 
-//func setupMsgServer(t testing.TB) (types.MsgServer, context.Context) {
-//	k, ctx := keepertest.CheckersKeeper(t)
-//	checkers.InitGenesis(ctx, *k, *types.DefaultGenesis())
-//	return keeper.NewMsgServerImpl(*k), sdk.WrapSDKContext(ctx)
-//}
+	suite.msgSrv.CreateGame(suite.ctx, &types.MsgCreateGame{
+		Creator: alice,
+		Black:   bob,
+		Red:     carol,
+	})
+}
 
 func (suite *MsgSrvTestSuite) TestCreateGame() {
 	createResponse, err := suite.msgSrv.CreateGame(suite.ctx, &types.MsgCreateGame{
@@ -54,7 +54,7 @@ func (suite *MsgSrvTestSuite) TestCreateGame() {
 	})
 	require.Nil(suite.T(), err)
 	require.EqualValues(suite.T(), types.MsgCreateGameResponse{
-		GameIndex: "1", // TODO: update with a proper value when updated
+		GameIndex: "2", // TODO: update with a proper value when updated
 	}, *createResponse)
 }
 
@@ -67,7 +67,7 @@ func (suite *MsgSrvTestSuite) TestCreate1GameHasSaved() {
 	systemInfo, found := suite.k.GetSystemInfo(sdk.UnwrapSDKContext(suite.ctx))
 	require.True(suite.T(), found)
 	require.EqualValues(suite.T(), types.SystemInfo{
-		NextId: 2,
+		NextId: 3,
 	}, systemInfo)
 	game1, found1 := suite.k.GetStoredGame(sdk.UnwrapSDKContext(suite.ctx), "1")
 	require.True(suite.T(), found1)
@@ -75,6 +75,273 @@ func (suite *MsgSrvTestSuite) TestCreate1GameHasSaved() {
 		Index: "1",
 		Board: "*b*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
 		Turn:  "b",
+		Black: bob,
+		Red:   carol,
+	}, game1)
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMove() {
+	playMoveResponse, err := suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	require.Nil(suite.T(), err)
+	require.EqualValues(suite.T(), types.MsgPlayMoveResponse{
+		CapturedX: -1,
+		CapturedY: -1,
+		Winner:    "*",
+	}, *playMoveResponse)
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMoveGameNotFound() {
+	playMoveResponse, err := suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "2",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	require.Nil(suite.T(), playMoveResponse)
+	require.Equal(suite.T(), "2: game by id not found", err.Error())
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMoveSameBlackRed() {
+	playMoveResponse, err := suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	require.Nil(suite.T(), err)
+	require.EqualValues(suite.T(), types.MsgPlayMoveResponse{
+		CapturedX: -1,
+		CapturedY: -1,
+		Winner:    "*",
+	}, *playMoveResponse)
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMoveSavedGame() {
+	suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	systemInfo, found := suite.k.GetSystemInfo(ctx)
+	require.True(suite.T(), found)
+	require.EqualValues(suite.T(), types.SystemInfo{
+		NextId: 2,
+	}, systemInfo)
+	game1, found := suite.k.GetStoredGame(ctx, "1")
+	require.True(suite.T(), found)
+	require.EqualValues(suite.T(), types.StoredGame{
+		Index: "1",
+		Board: "*b*b*b*b|b*b*b*b*|***b*b*b|**b*****|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:  "r",
+		Black: bob,
+		Red:   carol,
+	}, game1)
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMoveNotPlayer() {
+	playMoveResponse, err := suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   alice,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	require.Nil(suite.T(), playMoveResponse)
+	require.Equal(suite.T(), alice+": message creator is not a player", err.Error())
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMoveCannotParseGame() {
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	storedGame, _ := suite.k.GetStoredGame(ctx, "1")
+	storedGame.Board = "not a board"
+	suite.k.SetStoredGame(ctx, storedGame)
+	defer func() {
+		r := recover()
+		require.NotNil(suite.T(), r, "The code did not panic")
+		require.Equal(suite.T(), r, "game cannot be parsed: invalid board string: not a board")
+	}()
+	suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMoveWrongOutOfTurn() {
+	playMoveResponse, err := suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   carol,
+		GameIndex: "1",
+		FromX:     0,
+		FromY:     5,
+		ToX:       1,
+		ToY:       4,
+	})
+	require.Nil(suite.T(), playMoveResponse)
+	require.Equal(suite.T(), "{red}: player tried to play out of turn", err.Error())
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMoveWrongPieceAtDestination() {
+	playMoveResponse, err := suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     0,
+		ToX:       0,
+		ToY:       1,
+	})
+	require.Nil(suite.T(), playMoveResponse)
+	require.Equal(suite.T(), "Already piece at destination position: {0 1}: wrong move", err.Error())
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMove2() {
+	suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	playMoveResponse, err := suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   carol,
+		GameIndex: "1",
+		FromX:     0,
+		FromY:     5,
+		ToX:       1,
+		ToY:       4,
+	})
+	require.Nil(suite.T(), err)
+	require.EqualValues(suite.T(), types.MsgPlayMoveResponse{
+		CapturedX: -1,
+		CapturedY: -1,
+		Winner:    "*",
+	}, *playMoveResponse)
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMove2SavedGame() {
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   carol,
+		GameIndex: "1",
+		FromX:     0,
+		FromY:     5,
+		ToX:       1,
+		ToY:       4,
+	})
+	systemInfo, found := suite.k.GetSystemInfo(ctx)
+	require.True(suite.T(), found)
+	require.EqualValues(suite.T(), types.SystemInfo{
+		NextId: 2,
+	}, systemInfo)
+	game1, found := suite.k.GetStoredGame(ctx, "1")
+	require.True(suite.T(), found)
+	require.EqualValues(suite.T(), types.StoredGame{
+		Index: "1",
+		Board: "*b*b*b*b|b*b*b*b*|***b*b*b|**b*****|*r******|**r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:  "b",
+		Black: bob,
+		Red:   carol,
+	}, game1)
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMove3() {
+	suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   carol,
+		GameIndex: "1",
+		FromX:     0,
+		FromY:     5,
+		ToX:       1,
+		ToY:       4,
+	})
+	playMoveResponse, err := suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     2,
+		FromY:     3,
+		ToX:       0,
+		ToY:       5,
+	})
+	require.Nil(suite.T(), err)
+	require.EqualValues(suite.T(), types.MsgPlayMoveResponse{
+		CapturedX: 1,
+		CapturedY: 4,
+		Winner:    "*",
+	}, *playMoveResponse)
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMove3SavedGame() {
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	suite.msgSrv.PlayMove(ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	suite.msgSrv.PlayMove(ctx, &types.MsgPlayMove{
+		Creator:   carol,
+		GameIndex: "1",
+		FromX:     0,
+		FromY:     5,
+		ToX:       1,
+		ToY:       4,
+	})
+	suite.msgSrv.PlayMove(ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     2,
+		FromY:     3,
+		ToX:       0,
+		ToY:       5,
+	})
+	systemInfo, found := suite.k.GetSystemInfo(ctx)
+	require.True(suite.T(), found)
+	require.EqualValues(suite.T(), types.SystemInfo{
+		NextId: 2,
+	}, systemInfo)
+	game1, found := suite.k.GetStoredGame(ctx, "1")
+	require.True(suite.T(), found)
+	require.EqualValues(suite.T(), types.StoredGame{
+		Index: "1",
+		Board: "*b*b*b*b|b*b*b*b*|***b*b*b|********|********|b*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:  "r",
 		Black: bob,
 		Red:   carol,
 	}, game1)
