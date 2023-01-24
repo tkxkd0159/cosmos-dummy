@@ -54,6 +54,13 @@ curl https://get.ignite.com/username/checkers@latest! | sudo bash
 ```shell
 ignite scaffold single systemInfo nextId:uint --module checkers --no-message
 ignite scaffold map storedGame board turn black red --index index --module checkers --no-message
+ignite scaffold message createGame black red --module checkers --response gameIndex
+
+# test specific package
+go test -v checkers/x/checkers/keeper
+
+# reset states & start chain with single node
+ignite chain serve --reset-once
 ```
 
 ## Learn more
