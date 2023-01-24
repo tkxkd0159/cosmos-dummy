@@ -63,7 +63,10 @@ checkersd tx checkers create-game $alice $bob --from $alice --broadcast-mode blo
 checkersd query checkers show-stored-game 1 --output json | jq ".storedGame.board" | sed 's/"//g' | sed 's/|/\n/g'
 
 ignite scaffold message playMove gameIndex fromX:uint fromY:uint toX:uint toY:uint --module checkers --response capturedX:int,capturedY:int,winner
-
+checkersd tx checkers play-move 1 0 5 1 4 --from $bob   # out of turn
+checkersd tx checkers play-move 1 1 0 0 1 --from $alice # wrong move
+checkersd tx checkers play-move 1 1 2 2 3 --from $alice # success
+checkersd query checkers show-stored-game 1 --output json | jq ".storedGame.board" | sed 's/"//g' | sed 's/|/\n/g' # check alice's piece
 
 # etc.
 # 1) test specific package
