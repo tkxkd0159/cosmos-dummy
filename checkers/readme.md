@@ -56,10 +56,17 @@ ignite scaffold single systemInfo nextId:uint --module checkers --no-message
 ignite scaffold map storedGame board turn black red --index index --module checkers --no-message
 ignite scaffold message createGame black red --module checkers --response gameIndex
 
-# test specific package
+export alice=$(checkersd keys show alice -a)
+export bob=$(checkersd keys show bob -a)
+checkersd tx checkers create-game $alice $bob --from $alice --dry-run
+checkersd tx checkers create-game $alice $bob --from $alice --broadcast-mode block
+checkersd query checkers show-stored-game 1 --output json | jq ".storedGame.board" | sed 's/"//g' | sed 's/|/\n/g'
+
+# etc.
+# 1) test specific package
 go test -v checkers/x/checkers/keeper
 
-# reset states & start chain with single node
+# 2) reset states & start chain with single node
 ignite chain serve --reset-once
 ```
 
