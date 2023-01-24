@@ -34,11 +34,12 @@ func (k msgServer) CreateGame(goCtx context.Context, msg *types.MsgCreateGame) (
 
 	newGame := rules.New()
 	storedGame := types.StoredGame{
-		Index: newIndex,
-		Board: newGame.String(),
-		Turn:  rules.PieceStrings[newGame.Turn],
-		Black: msg.Black,
-		Red:   msg.Red,
+		Index:     newIndex,
+		Board:     newGame.String(),
+		Turn:      rules.PieceStrings[newGame.Turn],
+		Black:     msg.Black,
+		Red:       msg.Red,
+		MoveCount: 0,
 	}
 
 	err := storedGame.Validate()
@@ -108,6 +109,7 @@ func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*typ
 		return nil, sdkerrors.Wrapf(types.ErrWrongMove, moveErr.Error())
 	}
 
+	storedGame.MoveCount++
 	storedGame.Board = game.String()
 	storedGame.Turn = rules.PieceStrings[game.Turn]
 	k.Keeper.SetStoredGame(ctx, storedGame)
@@ -127,4 +129,36 @@ func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*typ
 		CapturedY: int32(captured.Y),
 		Winner:    rules.PieceStrings[game.Winner()],
 	}, nil
+}
+
+func (k msgServer) RejectGame(goCtx context.Context, msg *types.MsgRejectGame) (*types.MsgRejectGameResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	storedGame, found := k.Keeper.GetStoredGame(ctx, msg.GameIndex)
+	if !found {
+		return nil, sdkerrors.Wrapf(types.ErrGameNotFound, "%s", msg.GameIndex)
+	}
+
+	if storedGame.Black == msg.Creator {
+		if 0 < storedGame.MoveCount {
+			return nil, types.ErrBlackAlreadyPlayed
+		}
+	} else if storedGame.Red == msg.Creator {
+		if 1 < storedGame.MoveCount {
+			return nil, types.ErrRedAlreadyPlayed
+		}
+	} else {
+		return nil, sdkerrors.Wrapf(types.ErrCreatorNotPlayer, "%s", msg.Creator)
+	}
+
+	k.Keeper.RemoveStoredGame(ctx, msg.GameIndex)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(types.GameRejectedEventType,
+			sdk.NewAttribute(types.GameRejectedEventCreator, msg.Creator),
+			sdk.NewAttribute(types.GameRejectedEventGameIndex, msg.GameIndex),
+		),
+	)
+
+	return &types.MsgRejectGameResponse{}, nil
 }

@@ -403,3 +403,25 @@ func (suite *MsgSrvTestSuite) TestPlayMove2Emitted() {
 		{Key: "winner", Value: "*"},
 	}, event.Attributes[5:])
 }
+
+func (suite *MsgSrvTestSuite) TestRejectGameByRedOneMoveRemovedGame() {
+	suite.msgSrv.PlayMove(suite.ctx, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	suite.msgSrv.RejectGame(suite.ctx, &types.MsgRejectGame{
+		Creator:   carol,
+		GameIndex: "1",
+	})
+	systemInfo, found := suite.k.GetSystemInfo(sdk.UnwrapSDKContext(suite.ctx))
+	require.True(suite.T(), found)
+	require.EqualValues(suite.T(), types.SystemInfo{
+		NextId: 2,
+	}, systemInfo)
+	_, found = suite.k.GetStoredGame(sdk.UnwrapSDKContext(suite.ctx), "1")
+	require.False(suite.T(), found)
+}

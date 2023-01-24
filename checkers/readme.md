@@ -68,11 +68,14 @@ checkersd tx checkers play-move 1 1 0 0 1 --from $alice # wrong move
 checkersd tx checkers play-move 1 1 2 2 3 --from $alice # success
 checkersd query checkers show-stored-game 1 --output json | jq ".storedGame.board" | sed 's/"//g' | sed 's/|/\n/g' # check alice's piece
 
+ignite scaffold message rejectGame gameIndex --module checkers
+
+
 # etc.
 # 1) test specific package
 go test -v checkers/x/checkers/keeper
 
-# 2) reset states & start chain with single node
+# 2) reset states & start chain with single node. Reload when update but only reset states at first starting (not for reloading)
 ignite chain serve --reset-once
 ```
 
