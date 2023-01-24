@@ -8,9 +8,10 @@ import { IgniteClient } from "../client"
 import { MissingWalletError } from "../helpers"
 import { Api } from "./rest";
 import { MsgCreateGame } from "./types/checkers/checkers/tx";
+import { MsgPlayMove } from "./types/checkers/checkers/tx";
 
 
-export { MsgCreateGame };
+export { MsgCreateGame, MsgPlayMove };
 
 type sendMsgCreateGameParams = {
   value: MsgCreateGame,
@@ -18,9 +19,19 @@ type sendMsgCreateGameParams = {
   memo?: string
 };
 
+type sendMsgPlayMoveParams = {
+  value: MsgPlayMove,
+  fee?: StdFee,
+  memo?: string
+};
+
 
 type msgCreateGameParams = {
   value: MsgCreateGame,
+};
+
+type msgPlayMoveParams = {
+  value: MsgPlayMove,
 };
 
 
@@ -55,12 +66,34 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			}
 		},
 		
+		async sendMsgPlayMove({ value, fee, memo }: sendMsgPlayMoveParams): Promise<DeliverTxResponse> {
+			if (!signer) {
+					throw new Error('TxClient:sendMsgPlayMove: Unable to sign Tx. Signer is not present.')
+			}
+			try {			
+				const { address } = (await signer.getAccounts())[0]; 
+				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry, prefix});
+				let msg = this.msgPlayMove({ value: MsgPlayMove.fromPartial(value) })
+				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
+			} catch (e: any) {
+				throw new Error('TxClient:sendMsgPlayMove: Could not broadcast Tx: '+ e.message)
+			}
+		},
+		
 		
 		msgCreateGame({ value }: msgCreateGameParams): EncodeObject {
 			try {
 				return { typeUrl: "/checkers.checkers.MsgCreateGame", value: MsgCreateGame.fromPartial( value ) }  
 			} catch (e: any) {
 				throw new Error('TxClient:MsgCreateGame: Could not create message: ' + e.message)
+			}
+		},
+		
+		msgPlayMove({ value }: msgPlayMoveParams): EncodeObject {
+			try {
+				return { typeUrl: "/checkers.checkers.MsgPlayMove", value: MsgPlayMove.fromPartial( value ) }  
+			} catch (e: any) {
+				throw new Error('TxClient:MsgPlayMove: Could not create message: ' + e.message)
 			}
 		},
 		

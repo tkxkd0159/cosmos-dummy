@@ -62,6 +62,9 @@ checkersd tx checkers create-game $alice $bob --from $alice --dry-run
 checkersd tx checkers create-game $alice $bob --from $alice --broadcast-mode block
 checkersd query checkers show-stored-game 1 --output json | jq ".storedGame.board" | sed 's/"//g' | sed 's/|/\n/g'
 
+ignite scaffold message playMove gameIndex fromX:uint fromY:uint toX:uint toY:uint --module checkers --response capturedX:int,capturedY:int,winner
+
+
 # etc.
 # 1) test specific package
 go test -v checkers/x/checkers/keeper
