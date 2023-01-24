@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"strings"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -62,4 +63,41 @@ func TestGetAddressWrongRed(t *testing.T) {
 		err,
 		"red address is invalid: cosmos1xyxs3skf3f4jfqeuv89yyaqvjc6lffavxqhcff: decoding bech32 failed: invalid checksum (expected xqhc8g got xqhcff)")
 	require.EqualError(t, storedGame.Validate(), err.Error())
+}
+
+func TestParseGameCorrect(t *testing.T) {
+	game, err := GetStoredGame1().ParseGame()
+	require.EqualValues(t, rules.New().Pieces, game.Pieces)
+	require.Nil(t, err)
+}
+
+func TestParseGameCanIfChangedOk(t *testing.T) {
+	storedGame := GetStoredGame1()
+	storedGame.Board = strings.Replace(storedGame.Board, "b", "r", 1)
+	game, err := storedGame.ParseGame()
+	require.NotEqualValues(t, rules.New().Pieces, game.Pieces)
+	require.Nil(t, err)
+}
+
+func TestParseGameWrongPieceColor(t *testing.T) {
+	storedGame := GetStoredGame1()
+	storedGame.Board = strings.Replace(storedGame.Board, "b", "w", 1)
+	game, err := storedGame.ParseGame()
+	require.Nil(t, game)
+	require.EqualError(t, err, "game cannot be parsed: invalid board, invalid piece at 1, 0")
+	require.EqualError(t, storedGame.Validate(), err.Error())
+}
+
+func TestParseGameWrongTurnColor(t *testing.T) {
+	storedGame := GetStoredGame1()
+	storedGame.Turn = "w"
+	game, err := storedGame.ParseGame()
+	require.Nil(t, game)
+	require.EqualError(t, err, "game cannot be parsed: Turn: w")
+	require.EqualError(t, storedGame.Validate(), err.Error())
+}
+
+func TestGameValidateOk(t *testing.T) {
+	storedGame := GetStoredGame1()
+	require.NoError(t, storedGame.Validate())
 }
