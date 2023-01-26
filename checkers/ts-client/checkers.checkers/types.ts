@@ -1,11 +1,17 @@
+import { EventCreateGame } from "./types/checkers/checkers/events"
+import { EventMove } from "./types/checkers/checkers/events"
+import { EventRejectGame } from "./types/checkers/checkers/events"
 import { Params } from "./types/checkers/checkers/params"
-import { StoredGame } from "./types/checkers/checkers/stored_game"
-import { SystemInfo } from "./types/checkers/checkers/system_info"
+import { SystemInfo } from "./types/checkers/checkers/types"
+import { StoredGame } from "./types/checkers/checkers/types"
 
 
 export {     
+    EventCreateGame,
+    EventMove,
+    EventRejectGame,
     Params,
-    StoredGame,
     SystemInfo,
+    StoredGame,
     
  }

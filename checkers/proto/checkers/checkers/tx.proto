@@ -7,7 +7,7 @@ option go_package = "checkers/x/checkers/types";
 
 // Msg defines the Msg service.
 service Msg {
-      rpc CreateGame(MsgCreateGame) returns (MsgCreateGameResponse);
+  rpc CreateGame(MsgCreateGame) returns (MsgCreateGameResponse);
   rpc PlayMove(MsgPlayMove) returns (MsgPlayMoveResponse);
   rpc RejectGame(MsgRejectGame) returns (MsgRejectGameResponse);
 // this line is used by starport scaffolding # proto/tx/rpc

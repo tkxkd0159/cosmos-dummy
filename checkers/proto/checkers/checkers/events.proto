@@ -1,0 +1,24 @@
+syntax = "proto3";
+package checkers.checkers;
+
+option go_package = "checkers/x/checkers/types";
+
+message EventCreateGame {
+  string creator = 1;
+  string game_index = 2;
+  string block = 3;
+  string red = 4;
+}
+
+message EventMove {
+  string creator = 1;
+  string game_index = 2;
+  int64 captured_x = 3;
+  int64 captured_y = 4;
+  string winner = 5;
+}
+
+message EventRejectGame {
+  string creator = 1;
+  string game_index = 2;
+}

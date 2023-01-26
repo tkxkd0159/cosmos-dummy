@@ -1,11 +1,14 @@
 import { Client, registry, MissingWalletError } from 'checkers-client-ts'
 
+import { EventCreateGame } from "checkers-client-ts/checkers.checkers/types"
+import { EventMove } from "checkers-client-ts/checkers.checkers/types"
+import { EventRejectGame } from "checkers-client-ts/checkers.checkers/types"
 import { Params } from "checkers-client-ts/checkers.checkers/types"
-import { StoredGame } from "checkers-client-ts/checkers.checkers/types"
 import { SystemInfo } from "checkers-client-ts/checkers.checkers/types"
+import { StoredGame } from "checkers-client-ts/checkers.checkers/types"
 
 
-export { Params, StoredGame, SystemInfo };
+export { EventCreateGame, EventMove, EventRejectGame, Params, SystemInfo, StoredGame };
 
 function initClient(vuexGetters) {
 	return new Client(vuexGetters['common/env/getEnv'], vuexGetters['common/wallet/signer'])
@@ -42,9 +45,12 @@ const getDefaultState = () => {
 				StoredGameAll: {},
 				
 				_Structure: {
+						EventCreateGame: getStructure(EventCreateGame.fromPartial({})),
+						EventMove: getStructure(EventMove.fromPartial({})),
+						EventRejectGame: getStructure(EventRejectGame.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
-						StoredGame: getStructure(StoredGame.fromPartial({})),
 						SystemInfo: getStructure(SystemInfo.fromPartial({})),
+						StoredGame: getStructure(StoredGame.fromPartial({})),
 						
 		},
 		_Registry: registry,

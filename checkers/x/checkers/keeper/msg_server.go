@@ -51,14 +51,13 @@ func (k msgServer) CreateGame(goCtx context.Context, msg *types.MsgCreateGame) (
 	systemInfo.NextId++
 	k.Keeper.SetSystemInfo(ctx, systemInfo)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.GameCreatedEventType,
-			sdk.NewAttribute(types.GameCreatedEventCreator, msg.Creator),
-			sdk.NewAttribute(types.GameCreatedEventGameIndex, newIndex),
-			sdk.NewAttribute(types.GameCreatedEventBlack, msg.Black),
-			sdk.NewAttribute(types.GameCreatedEventRed, msg.Red),
-		),
-	)
+	ctx.EventManager().EmitTypedEvent(
+		&types.EventCreateGame{
+			Creator:   msg.Creator,
+			GameIndex: newIndex,
+			Block:     msg.Black,
+			Red:       msg.Red,
+		})
 
 	return &types.MsgCreateGameResponse{
 		GameIndex: newIndex,
@@ -114,15 +113,14 @@ func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*typ
 	storedGame.Turn = rules.PieceStrings[game.Turn]
 	k.Keeper.SetStoredGame(ctx, storedGame)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.MovePlayedEventType,
-			sdk.NewAttribute(types.MovePlayedEventCreator, msg.Creator),
-			sdk.NewAttribute(types.MovePlayedEventGameIndex, msg.GameIndex),
-			sdk.NewAttribute(types.MovePlayedEventCapturedX, strconv.FormatInt(int64(captured.X), 10)),
-			sdk.NewAttribute(types.MovePlayedEventCapturedY, strconv.FormatInt(int64(captured.Y), 10)),
-			sdk.NewAttribute(types.MovePlayedEventWinner, rules.PieceStrings[game.Winner()]),
-		),
-	)
+	ctx.EventManager().EmitTypedEvent(
+		&types.EventMove{
+			Creator:   msg.Creator,
+			GameIndex: msg.GameIndex,
+			CapturedX: int64(captured.X),
+			CapturedY: int64(captured.Y),
+			Winner:    rules.PieceStrings[game.Winner()],
+		})
 
 	return &types.MsgPlayMoveResponse{
 		CapturedX: int32(captured.X),
@@ -153,12 +151,11 @@ func (k msgServer) RejectGame(goCtx context.Context, msg *types.MsgRejectGame) (
 
 	k.Keeper.RemoveStoredGame(ctx, msg.GameIndex)
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(types.GameRejectedEventType,
-			sdk.NewAttribute(types.GameRejectedEventCreator, msg.Creator),
-			sdk.NewAttribute(types.GameRejectedEventGameIndex, msg.GameIndex),
-		),
-	)
+	ctx.EventManager().EmitTypedEvent(
+		&types.EventRejectGame{
+			Creator:   msg.Creator,
+			GameIndex: msg.GameIndex,
+		})
 
 	return &types.MsgRejectGameResponse{}, nil
 }

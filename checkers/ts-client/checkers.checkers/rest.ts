@@ -280,7 +280,7 @@ export class HttpClient<SecurityDataType = unknown> {
 }
 
 /**
- * @title checkers/checkers/genesis.proto
+ * @title checkers/checkers/events.proto
  * @version version not set
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {

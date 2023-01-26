@@ -3,8 +3,7 @@ package checkers.checkers;
 
 import "gogoproto/gogo.proto";
 import "checkers/checkers/params.proto";
-import "checkers/checkers/system_info.proto";
-import "checkers/checkers/stored_game.proto";
+import "checkers/checkers/types.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "checkers/x/checkers/types";

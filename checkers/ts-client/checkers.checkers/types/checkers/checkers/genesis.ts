@@ -1,8 +1,7 @@
 /* eslint-disable */
 import _m0 from "protobufjs/minimal";
 import { Params } from "./params";
-import { StoredGame } from "./stored_game";
-import { SystemInfo } from "./system_info";
+import { StoredGame, SystemInfo } from "./types";
 
 export const protobufPackage = "checkers.checkers";
 

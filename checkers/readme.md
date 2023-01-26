@@ -69,7 +69,7 @@ checkersd tx checkers play-move 1 1 2 2 3 --from $alice # success
 checkersd query checkers show-stored-game 1 --output json | jq ".storedGame.board" | sed 's/"//g' | sed 's/|/\n/g' # check alice's piece
 
 ignite scaffold message rejectGame gameIndex --module checkers
-
+checkersd tx checkers reject-game 1 --from $bob
 
 # etc.
 # 1) test specific package
