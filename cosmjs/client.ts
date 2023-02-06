@@ -1,7 +1,8 @@
-import {IndexedTx, StargateClient, SigningStargateClient, DeliverTxResponse} from "@cosmjs/stargate"
-import { MsgSend } from "cosmjs-types/cosmos/bank/v1beta1/tx"
-import { Tx } from "cosmjs-types/cosmos/tx/v1beta1/tx"
-import { WalletFromMnemonic } from "./wallet"
+import {IndexedTx, StargateClient, SigningStargateClient, DeliverTxResponse, GasPrice} from "@cosmjs/stargate"
+import {OfflineDirectSigner} from "@cosmjs/proto-signing"
+import {MsgSend} from "cosmjs-types/cosmos/bank/v1beta1/tx"
+import {Tx} from "cosmjs-types/cosmos/tx/v1beta1/tx"
+import {WalletFromMnemonic} from "./wallet"
 
 const TM_RPC_TESTNET = "rpc.sentry-01.theta-testnet.polypore.xyz:26657"
 const TM_RPC_LOCAL = "127.0.0.1:26657"
@@ -36,7 +37,20 @@ const queryTx = async (txid: string): Promise<void> => {
     }
 }
 
-const sendTx = async (): Promise<DeliverTxResponse> => {
+type signerSuite = { signlingClient: SigningStargateClient, signer: OfflineDirectSigner, signerAddr: string }
+
+const genClient = async (mnemonicPath: string): Promise<signerSuite> => {
+    const signer = await WalletFromMnemonic(mnemonicPath)
+    const signerAddr = (await signer.getAccounts())[0].address
+    const client = await SigningStargateClient.connectWithSigner(TM_RPC_LOCAL, signer, {gasPrice: GasPrice.fromString("0.0025stake")})
+    return {
+        signer,
+        signerAddr,
+        signlingClient: client
+    }
+}
+
+const sendTokens = async (): Promise<DeliverTxResponse> => {
     const signer = await WalletFromMnemonic("./keys/local.alice.key")
     const signerAddr = (await signer.getAccounts())[0].address
     const client = await SigningStargateClient.connectWithSigner(TM_RPC_LOCAL, signer)
@@ -62,5 +76,6 @@ const sendTx = async (): Promise<DeliverTxResponse> => {
 
 export {
     queryTx,
-    sendTx
+    sendTokens,
+    genClient,
 }
