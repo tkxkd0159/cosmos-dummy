@@ -1,0 +1,68 @@
+syntax = "proto3";
+package checkers.checkers;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "checkers/checkers/params.proto";
+import "checkers/checkers/types.proto";
+// this line is used by starport scaffolding # 1
+
+option go_package = "checkers/x/checkers/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/checkers/checkers/params";
+  }
+  // Queries a SystemInfo by index.
+	rpc SystemInfo(QueryGetSystemInfoRequest) returns (QueryGetSystemInfoResponse) {
+		option (google.api.http).get = "/checkers/checkers/system_info";
+	}
+// Queries a StoredGame by index.
+	rpc StoredGame(QueryGetStoredGameRequest) returns (QueryGetStoredGameResponse) {
+		option (google.api.http).get = "/checkers/checkers/stored_game/{index}";
+	}
+
+	// Queries a list of StoredGame items.
+	rpc StoredGameAll(QueryAllStoredGameRequest) returns (QueryAllStoredGameResponse) {
+		option (google.api.http).get = "/checkers/checkers/stored_game";
+	}
+
+// this line is used by starport scaffolding # 2
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetSystemInfoRequest {}
+
+message QueryGetSystemInfoResponse {
+	SystemInfo SystemInfo = 1 [(gogoproto.nullable) = false];
+}
+message QueryGetStoredGameRequest {
+	  string index = 1;
+
+}
+
+message QueryGetStoredGameResponse {
+	StoredGame storedGame = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllStoredGameRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllStoredGameResponse {
+	repeated StoredGame storedGame = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// this line is used by starport scaffolding # 3
