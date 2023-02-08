@@ -1,8 +1,9 @@
 import {ChangeEvent, Component, MouseEvent} from "react"
 import styles from '@/styles/Home.module.css'
 import {Window as KeplrWindow} from "@keplr-wallet/types";
-import {StargateClient, SigningStargateClient, Coin} from "@cosmjs/stargate"
+import {StargateClient, SigningStargateClient, Coin, GasPrice} from "@cosmjs/stargate"
 import {AccountData} from "@cosmjs/proto-signing";
+import { StdFee } from "@cosmjs/amino";
 
 declare global {
     interface Window extends KeplrWindow {
@@ -89,26 +90,34 @@ export class FaucetSender extends Component<FaucetSenderProps, FaucetSenderState
         const signingClient = await SigningStargateClient.connectWithSigner(
             rpcUrl,
             offlineSigner,
+            {gasPrice: GasPrice.fromString("0stake")}
         )
         // Get the address and balance of your user
         const account: AccountData = (await offlineSigner.getAccounts())[0]
-        // Submit the transaction to send tokens to the faucet
-        const sendResult = await signingClient.sendTokens(
-            account.address,
-            faucetAddress,
-            [
-                {
-                    denom: denom,
-                    amount: toSend,
-                },
-            ],
-            {
-                amount: [{denom: "uatom", amount: "500"}],
-                gas: "200000",
-            },
-        )
-        // Print the result to the console
-        // console.log(sendResult)
+        // usee StdFee when you don't assign gasPriceStep
+        // const fee: StdFee = {
+        //     amount: [{denom: "uatom", amount: "500"}],
+        //     gas: "200000",
+        // }
+
+        try {
+            const sendResult = await signingClient.sendTokens(
+                account.address,
+                faucetAddress,
+                [
+                    {
+                        denom: denom,
+                        amount: toSend,
+                    },
+                ],
+                "auto"
+                ,
+            )
+            // Print the result to the console
+            // console.log(sendResult)
+        } catch (e) {
+            console.log(`Send ERR:${e}`)
+        }
 
         // Update the balance in the user interface
         const afterBalance = (await signingClient.getBalance(account.address, denom)).amount
@@ -218,6 +227,54 @@ export class FaucetSender extends Component<FaucetSenderProps, FaucetSenderState
                             coinGeckoId: "cosmos",
                         },
                         features: ["stargate", "ibc-transfer", "no-legacy-stdTx"],
+                    });
+
+                    await window.keplr.experimentalSuggestChain({
+                        chainId: "checkers",
+                        chainName: "checkers",
+                        rpc: "http://127.0.0.1:26657",
+                        rest: "http://127.0.0.1:1317",
+                        bip44: {
+                            coinType: 118,
+                        },
+                        bech32Config: {
+                            bech32PrefixAccAddr: "cosmos",
+                            bech32PrefixAccPub: "cosmos" + "pub",
+                            bech32PrefixValAddr: "cosmos" + "valoper",
+                            bech32PrefixValPub: "cosmos" + "valoperpub",
+                            bech32PrefixConsAddr: "cosmos" + "valcons",
+                            bech32PrefixConsPub: "cosmos" + "valconspub",
+                        },
+                        currencies: [
+                            {
+                                coinDenom: "STAKE",
+                                coinMinimalDenom: "stake",
+                                coinDecimals: 0,
+                            },
+                            {
+                                coinDenom: "TOKEN",
+                                coinMinimalDenom: "token",
+                                coinDecimals: 0,
+                            },
+                        ],
+                        feeCurrencies: [
+                            {
+                                coinDenom: "STAKE",
+                                coinMinimalDenom: "stake",
+                                coinDecimals: 0,
+                                gasPriceStep: {
+                                    low: 0.1,
+                                    average: 1,
+                                    high: 10,
+                                },
+                            },
+                        ],
+                        stakeCurrency: {
+                            coinDenom: "STAKE",
+                            coinMinimalDenom: "stake",
+                            coinDecimals: 0,
+                        },
+                        features: ["ibc-transfer"],
                     });
                 } catch(err) {
                     alert(`Failed to suggest the chain ${err}`);
