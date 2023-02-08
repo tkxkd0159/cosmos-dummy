@@ -20,10 +20,10 @@ if (isGen) {
 }
 
 
-const WalletFromMnemonic = async (mnemonicPath: string): Promise<OfflineDirectSigner> => {
+const WalletFromMnemonic = async (mnemonicPath: string, prefix: string): Promise<OfflineDirectSigner> => {
     const p: HdPath = stringToPath("m/44'/118'/0'/0/0");
     const mnemonic = await readFile(mnemonicPath, { encoding: 'utf8' })
-    return await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {prefix: "cosmos", hdPaths: [p]})
+    return await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {prefix: prefix, hdPaths: [p]})
 }
 
 const WalletFromPrivkey = async (keypath: string): Promise<OfflineDirectSigner>  => {
