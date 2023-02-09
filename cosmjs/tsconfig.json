@@ -1,0 +1,32 @@
+{
+  "display": "Node 16",
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "target": "es2021",
+    "lib": [
+      "es2021"
+    ],
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "downlevelIteration": true,
+    "importHelpers": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist/",
+    "removeComments": true,
+    "baseUrl": ".",
+    "paths": {
+      "@checker/*": [
+        "client/src/types/generated/checkers/checkers/*"
+      ],
+      "@third-proto/*": [
+        "client/src/types/generated/cosmos/*",
+        "client/src/types/generated/google/*",
+        "client/src/types/generated/gogoproto/*",
+      ]
+    }
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"],
+}
