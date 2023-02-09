@@ -1,6 +1,7 @@
 import { queryTx, sendTokens, SuperCosmosClient } from "./client";
 import { MsgMultiSend, MsgSend } from "cosmjs-types/cosmos/bank/v1beta1/tx";
-import {MsgCreateGameEncodeObject} from "./extension";
+import {MsgCreateGameEncodeObject, MsgRejectGameEncodeObject} from "./extension";
+import {MsgRejectGame} from "@checker/tx";
 
 const TM_RPC_TESTNET = "rpc.sentry-01.theta-testnet.polypore.xyz:26657";
 const TM_RPC_LOCAL = "127.0.0.1:26657";
@@ -22,7 +23,7 @@ const TM_RPC_LOCAL = "127.0.0.1:26657";
     client.Q.checker.systemInfo().then(console.log)
     client.Q.checker.params().then(console.log)
 
-    const msg: MsgCreateGameEncodeObject = {
+    const msg1: MsgCreateGameEncodeObject = {
         typeUrl: "/checkers.checkers.MsgCreateGame",
         value: {
             creator: client.address,
@@ -30,8 +31,17 @@ const TM_RPC_LOCAL = "127.0.0.1:26657";
             red: "cosmos1wpwx3e8gw80y82gsluq7fhcant0e4eddmjcj8y"
         },
     }
-    console.log(await client.sendTx([msg]))
-    console.log(await client.Q.checker.storedGame("1"))
+
+    const msg2: MsgRejectGameEncodeObject = {
+        typeUrl: "/checkers.checkers.MsgRejectGame",
+        value: {
+            creator: client.address,
+            gameIndex: '2',
+        },
+    }
+
+    console.log(await client.sendTx([msg1, msg2]))
+    // console.log(await client.Q.checker.storedGame("1"))
     console.log(await client.Q.checker.storedGameAll())
 
 })();

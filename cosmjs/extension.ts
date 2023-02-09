@@ -59,6 +59,16 @@ interface MsgCreateGameEncodeObject extends EncodeObject {
     readonly value: Partial<MsgCreateGame>;
 }
 
+interface MsgRejectGameEncodeObject extends EncodeObject {
+    readonly typeUrl: "/checkers.checkers.MsgRejectGame";
+    readonly value: Partial<MsgRejectGame>;
+}
+
+interface MsgPlayMoveEncodeObject extends EncodeObject {
+    readonly typeUrl: "/checkers.checkers.MsgPlayMove";
+    readonly value: Partial<MsgPlayMove>;
+}
+
 const checkerTypes: ReadonlyArray<[string, GeneratedType]> = [
     ["/checkers.checkers.MsgCreateGame", MsgCreateGame],
     ["/checkers.checkers.MsgRejectGame", MsgRejectGame],
@@ -76,5 +86,7 @@ export {
     setupCheckerExtension,
     CheckerExtension,
     MsgCreateGameEncodeObject,
+    MsgRejectGameEncodeObject,
+    MsgPlayMoveEncodeObject,
     genCustomRegistry,
 }
