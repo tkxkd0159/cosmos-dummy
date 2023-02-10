@@ -67,16 +67,20 @@ func (suite *MsgSrvTestSuite) TestCreate1GameHasSaved() {
 	systemInfo, found := suite.k.GetSystemInfo(sdk.UnwrapSDKContext(suite.ctx))
 	require.True(suite.T(), found)
 	require.EqualValues(suite.T(), types.SystemInfo{
-		NextId: 3,
+		NextId:        3,
+		FifoHeadIndex: "1",
+		FifoTailIndex: "2",
 	}, systemInfo)
 	game1, found1 := suite.k.GetStoredGame(sdk.UnwrapSDKContext(suite.ctx), "1")
 	require.True(suite.T(), found1)
 	require.EqualValues(suite.T(), types.StoredGame{
-		Index: "1",
-		Board: "*b*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
-		Turn:  "b",
-		Black: bob,
-		Red:   carol,
+		Index:       "1",
+		Board:       "*b*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "b",
+		Black:       bob,
+		Red:         carol,
+		BeforeIndex: "-1",
+		AfterIndex:  "2",
 	}, game1)
 }
 
@@ -90,19 +94,19 @@ func (suite *MsgSrvTestSuite) TestCreate1GameEmitted() {
 	require.NotNil(suite.T(), ctx)
 	events := sdk.StringifyEvents(ctx.EventManager().ABCIEvents())
 	require.Len(suite.T(), events, 1)
-	require.EqualValues(suite.T(), sdk.StringEvent{
-		Type: "new-game-created",
+	require.EqualValues(suite.T(), sdk.StringEvents([]sdk.StringEvent{{
+		Type: "checkers.checkers.EventCreateGame",
 		Attributes: []sdk.Attribute{
-			{Key: "creator", Value: alice}, // by suite
-			{Key: "game-index", Value: "1"},
-			{Key: "black", Value: bob},
-			{Key: "red", Value: carol},
-			{Key: "creator", Value: alice}, // by func
-			{Key: "game-index", Value: "2"},
-			{Key: "black", Value: bob},
-			{Key: "red", Value: carol},
-		},
-	}, events[0])
+			{Key: "black", Value: "\"cosmos1xyxs3skf3f4jfqeuv89yyaqvjc6lffavxqhc8g\""}, // by suite
+			{Key: "creator", Value: "\"cosmos1jmjfq0tplp9tmx4v9uemw72y4d2wa5nr3xn9d3\""},
+			{Key: "game_index", Value: "\"1\""},
+			{Key: "red", Value: "\"cosmos1e0w5t53nrq7p66fye6c8p0ynyhf6y24l4yuxd7\""},
+			{Key: "black", Value: "\"cosmos1xyxs3skf3f4jfqeuv89yyaqvjc6lffavxqhc8g\""},
+			{Key: "creator", Value: "\"cosmos1jmjfq0tplp9tmx4v9uemw72y4d2wa5nr3xn9d3\""}, // by func
+			{Key: "game_index", Value: "\"2\""},
+			{Key: "red", Value: "\"cosmos1e0w5t53nrq7p66fye6c8p0ynyhf6y24l4yuxd7\""},
+		}},
+	}).Flatten(), events)
 }
 
 func (suite *MsgSrvTestSuite) TestPlayMove() {
@@ -166,16 +170,21 @@ func (suite *MsgSrvTestSuite) TestPlayMoveSavedGame() {
 	systemInfo, found := suite.k.GetSystemInfo(ctx)
 	require.True(suite.T(), found)
 	require.EqualValues(suite.T(), types.SystemInfo{
-		NextId: 2,
+		NextId:        2,
+		FifoHeadIndex: "1",
+		FifoTailIndex: "1",
 	}, systemInfo)
 	game1, found := suite.k.GetStoredGame(ctx, "1")
 	require.True(suite.T(), found)
 	require.EqualValues(suite.T(), types.StoredGame{
-		Index: "1",
-		Board: "*b*b*b*b|b*b*b*b*|***b*b*b|**b*****|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
-		Turn:  "r",
-		Black: bob,
-		Red:   carol,
+		Index:       "1",
+		Board:       "*b*b*b*b|b*b*b*b*|***b*b*b|**b*****|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "r",
+		Black:       bob,
+		Red:         carol,
+		MoveCount:   1,
+		BeforeIndex: "-1",
+		AfterIndex:  "-1",
 	}, game1)
 }
 
@@ -284,16 +293,21 @@ func (suite *MsgSrvTestSuite) TestPlayMove2SavedGame() {
 	systemInfo, found := suite.k.GetSystemInfo(ctx)
 	require.True(suite.T(), found)
 	require.EqualValues(suite.T(), types.SystemInfo{
-		NextId: 2,
+		NextId:        2,
+		FifoHeadIndex: "1",
+		FifoTailIndex: "1",
 	}, systemInfo)
 	game1, found := suite.k.GetStoredGame(ctx, "1")
 	require.True(suite.T(), found)
 	require.EqualValues(suite.T(), types.StoredGame{
-		Index: "1",
-		Board: "*b*b*b*b|b*b*b*b*|***b*b*b|**b*****|*r******|**r*r*r*|*r*r*r*r|r*r*r*r*",
-		Turn:  "b",
-		Black: bob,
-		Red:   carol,
+		Index:       "1",
+		Board:       "*b*b*b*b|b*b*b*b*|***b*b*b|**b*****|*r******|**r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "b",
+		Black:       bob,
+		Red:         carol,
+		MoveCount:   2,
+		BeforeIndex: "-1",
+		AfterIndex:  "-1",
 	}, game1)
 }
 
@@ -359,16 +373,21 @@ func (suite *MsgSrvTestSuite) TestPlayMove3SavedGame() {
 	systemInfo, found := suite.k.GetSystemInfo(ctx)
 	require.True(suite.T(), found)
 	require.EqualValues(suite.T(), types.SystemInfo{
-		NextId: 2,
+		NextId:        2,
+		FifoHeadIndex: "1",
+		FifoTailIndex: "1",
 	}, systemInfo)
 	game1, found := suite.k.GetStoredGame(ctx, "1")
 	require.True(suite.T(), found)
 	require.EqualValues(suite.T(), types.StoredGame{
-		Index: "1",
-		Board: "*b*b*b*b|b*b*b*b*|***b*b*b|********|********|b*r*r*r*|*r*r*r*r|r*r*r*r*",
-		Turn:  "r",
-		Black: bob,
-		Red:   carol,
+		Index:       "1",
+		Board:       "*b*b*b*b|b*b*b*b*|***b*b*b|********|********|b*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "r",
+		Black:       bob,
+		Red:         carol,
+		MoveCount:   3,
+		BeforeIndex: "-1",
+		AfterIndex:  "-1",
 	}, game1)
 }
 
@@ -393,14 +412,14 @@ func (suite *MsgSrvTestSuite) TestPlayMove2Emitted() {
 	require.NotNil(suite.T(), ctx)
 	events := sdk.StringifyEvents(ctx.EventManager().ABCIEvents())
 	require.Len(suite.T(), events, 2)
-	event := events[0]
-	require.Equal(suite.T(), "move-played", event.Type)
+	event := events[1]
+	require.Equal(suite.T(), "checkers.checkers.EventMove", event.Type)
 	require.EqualValues(suite.T(), []sdk.Attribute{
-		{Key: "creator", Value: carol},
-		{Key: "game-index", Value: "1"},
-		{Key: "captured-x", Value: "-1"},
-		{Key: "captured-y", Value: "-1"},
-		{Key: "winner", Value: "*"},
+		{Key: "captured_x", Value: "\"-1\""},
+		{Key: "captured_y", Value: "\"-1\""},
+		{Key: "creator", Value: "\"cosmos1e0w5t53nrq7p66fye6c8p0ynyhf6y24l4yuxd7\""},
+		{Key: "game_index", Value: "\"1\""},
+		{Key: "winner", Value: "\"*\""},
 	}, event.Attributes[5:])
 }
 
@@ -420,8 +439,226 @@ func (suite *MsgSrvTestSuite) TestRejectGameByRedOneMoveRemovedGame() {
 	systemInfo, found := suite.k.GetSystemInfo(sdk.UnwrapSDKContext(suite.ctx))
 	require.True(suite.T(), found)
 	require.EqualValues(suite.T(), types.SystemInfo{
-		NextId: 2,
+		NextId:        2,
+		FifoHeadIndex: "-1",
+		FifoTailIndex: "-1",
 	}, systemInfo)
 	_, found = suite.k.GetStoredGame(sdk.UnwrapSDKContext(suite.ctx), "1")
 	require.False(suite.T(), found)
+}
+
+func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
+	msgSrvr := suite.msgSrv
+	context := suite.ctx
+	keeper := suite.k
+	t := suite.T()
+
+	ctx := sdk.UnwrapSDKContext(context)
+	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+		Creator: alice,
+		Black:   bob,
+		Red:     carol,
+	})
+
+	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+		Creator: bob,
+		Black:   carol,
+		Red:     alice,
+	})
+	systemInfo2, found := keeper.GetSystemInfo(ctx)
+	require.True(t, found)
+	require.EqualValues(t, types.SystemInfo{
+		NextId:        4,
+		FifoHeadIndex: "1",
+		FifoTailIndex: "3",
+	}, systemInfo2)
+	game1, found := keeper.GetStoredGame(ctx, "1")
+	require.True(t, found)
+	require.EqualValues(t, types.StoredGame{
+		Index:       "1",
+		Board:       "*b*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "b",
+		Black:       bob,
+		Red:         carol,
+		MoveCount:   uint64(0),
+		BeforeIndex: "-1",
+		AfterIndex:  "2",
+	}, game1)
+	game2, found := keeper.GetStoredGame(ctx, "2")
+	require.True(t, found)
+	require.EqualValues(t, types.StoredGame{
+		Index:       "2",
+		Board:       "*b*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "b",
+		Black:       bob,
+		Red:         carol,
+		MoveCount:   uint64(0),
+		BeforeIndex: "1",
+		AfterIndex:  "3",
+	}, game2)
+
+	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+		Creator: carol,
+		Black:   alice,
+		Red:     bob,
+	})
+	systemInfo3, found := keeper.GetSystemInfo(ctx)
+	require.True(t, found)
+	require.EqualValues(t, types.SystemInfo{
+		NextId:        5,
+		FifoHeadIndex: "1",
+		FifoTailIndex: "4",
+	}, systemInfo3)
+	game1, found = keeper.GetStoredGame(ctx, "1")
+	require.True(t, found)
+	require.EqualValues(t, types.StoredGame{
+		Index:       "1",
+		Board:       "*b*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "b",
+		Black:       bob,
+		Red:         carol,
+		MoveCount:   uint64(0),
+		BeforeIndex: "-1",
+		AfterIndex:  "2",
+	}, game1)
+	game2, found = keeper.GetStoredGame(ctx, "2")
+	require.True(t, found)
+	require.EqualValues(t, types.StoredGame{
+		Index:       "2",
+		Board:       "*b*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "b",
+		Black:       bob,
+		Red:         carol,
+		MoveCount:   uint64(0),
+		BeforeIndex: "1",
+		AfterIndex:  "3",
+	}, game2)
+	game3, found := keeper.GetStoredGame(ctx, "3")
+	require.True(t, found)
+	require.EqualValues(t, types.StoredGame{
+		Index:       "3",
+		Board:       "*b*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "b",
+		Black:       carol,
+		Red:         alice,
+		MoveCount:   uint64(0),
+		BeforeIndex: "2",
+		AfterIndex:  "4",
+	}, game3)
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMove2Games2MovesHasSavedFifo() {
+	msgSrvr := suite.msgSrv
+	context := suite.ctx
+	keeper := suite.k
+	t := suite.T()
+
+	ctx := sdk.UnwrapSDKContext(context)
+	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+		Creator: bob,
+		Black:   carol,
+		Red:     alice,
+	})
+	msgSrvr.PlayMove(context, &types.MsgPlayMove{
+		Creator:   bob,
+		GameIndex: "1",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+
+	msgSrvr.PlayMove(context, &types.MsgPlayMove{
+		Creator:   carol,
+		GameIndex: "2",
+		FromX:     1,
+		FromY:     2,
+		ToX:       2,
+		ToY:       3,
+	})
+	systemInfo1, found := keeper.GetSystemInfo(ctx)
+	require.True(t, found)
+	require.EqualValues(t, types.SystemInfo{
+		NextId:        3,
+		FifoHeadIndex: "1",
+		FifoTailIndex: "2",
+	}, systemInfo1)
+	game1, found := keeper.GetStoredGame(ctx, "1")
+	require.True(t, found)
+	require.EqualValues(t, types.StoredGame{
+		Index:       "1",
+		Board:       "*b*b*b*b|b*b*b*b*|***b*b*b|**b*****|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "r",
+		Black:       bob,
+		Red:         carol,
+		MoveCount:   uint64(1),
+		BeforeIndex: "-1",
+		AfterIndex:  "2",
+	}, game1)
+	game2, found := keeper.GetStoredGame(ctx, "2")
+	require.True(t, found)
+	require.EqualValues(t, types.StoredGame{
+		Index:       "2",
+		Board:       "*b*b*b*b|b*b*b*b*|***b*b*b|**b*****|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "r",
+		Black:       carol,
+		Red:         alice,
+		MoveCount:   uint64(1),
+		BeforeIndex: "1",
+		AfterIndex:  "-1",
+	}, game2)
+}
+
+func (suite *MsgSrvTestSuite) TestRejectMiddleGameHasSavedFifo() {
+	msgSrvr := suite.msgSrv
+	context := suite.ctx
+	keeper := suite.k
+	t := suite.T()
+
+	ctx := sdk.UnwrapSDKContext(context)
+	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+		Creator: bob,
+		Black:   carol,
+		Red:     alice,
+	})
+	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+		Creator: carol,
+		Black:   alice,
+		Red:     bob,
+	})
+	msgSrvr.RejectGame(context, &types.MsgRejectGame{
+		Creator:   carol,
+		GameIndex: "2",
+	})
+	systemInfo, found := keeper.GetSystemInfo(ctx)
+	require.True(t, found)
+	require.EqualValues(t, types.SystemInfo{
+		NextId:        4,
+		FifoHeadIndex: "1",
+		FifoTailIndex: "3",
+	}, systemInfo)
+	game1, found := keeper.GetStoredGame(ctx, "1")
+	require.True(t, found)
+	require.EqualValues(t, types.StoredGame{
+		Index:       "1",
+		Board:       "*b*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "b",
+		Black:       bob,
+		Red:         carol,
+		MoveCount:   uint64(0),
+		BeforeIndex: "-1",
+		AfterIndex:  "3",
+	}, game1)
+	game3, found := keeper.GetStoredGame(ctx, "3")
+	require.True(t, found)
+	require.EqualValues(t, types.StoredGame{
+		Index:       "3",
+		Board:       "*b*b*b*b|b*b*b*b*|*b*b*b*b|********|********|r*r*r*r*|*r*r*r*r|r*r*r*r*",
+		Turn:        "b",
+		Black:       alice,
+		Red:         bob,
+		MoveCount:   uint64(0),
+		BeforeIndex: "1",
+		AfterIndex:  "-1",
+	}, game3)
 }

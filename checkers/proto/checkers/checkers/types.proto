@@ -5,7 +5,8 @@ option go_package = "checkers/x/checkers/types";
 
 message SystemInfo {
   uint64 nextId = 1;
-
+  string fifoHeadIndex = 2; // Will contain the index of the game at the head
+  string fifoTailIndex = 3; // Will contain the index of the game at the tail
 }
 
 message StoredGame {
@@ -15,4 +16,6 @@ message StoredGame {
   string black = 4;
   string red = 5;
   uint64 moveCount = 6;
+  string beforeIndex = 7; // Pertains to the FIFO. Toward head
+  string afterIndex = 8; // Pertains to the FIFO. Toward tail
 }

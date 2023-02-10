@@ -6,6 +6,10 @@ export const protobufPackage = "checkers.checkers";
 
 export interface SystemInfo {
   nextId: number;
+  /** Will contain the index of the game at the head */
+  fifoHeadIndex: string;
+  /** Will contain the index of the game at the tail */
+  fifoTailIndex: string;
 }
 
 export interface StoredGame {
@@ -15,16 +19,26 @@ export interface StoredGame {
   black: string;
   red: string;
   moveCount: number;
+  /** Pertains to the FIFO. Toward head */
+  beforeIndex: string;
+  /** Pertains to the FIFO. Toward tail */
+  afterIndex: string;
 }
 
 function createBaseSystemInfo(): SystemInfo {
-  return { nextId: 0 };
+  return { nextId: 0, fifoHeadIndex: "", fifoTailIndex: "" };
 }
 
 export const SystemInfo = {
   encode(message: SystemInfo, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.nextId !== 0) {
       writer.uint32(8).uint64(message.nextId);
+    }
+    if (message.fifoHeadIndex !== "") {
+      writer.uint32(18).string(message.fifoHeadIndex);
+    }
+    if (message.fifoTailIndex !== "") {
+      writer.uint32(26).string(message.fifoTailIndex);
     }
     return writer;
   },
@@ -39,6 +53,12 @@ export const SystemInfo = {
         case 1:
           message.nextId = longToNumber(reader.uint64() as Long);
           break;
+        case 2:
+          message.fifoHeadIndex = reader.string();
+          break;
+        case 3:
+          message.fifoTailIndex = reader.string();
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -48,24 +68,32 @@ export const SystemInfo = {
   },
 
   fromJSON(object: any): SystemInfo {
-    return { nextId: isSet(object.nextId) ? Number(object.nextId) : 0 };
+    return {
+      nextId: isSet(object.nextId) ? Number(object.nextId) : 0,
+      fifoHeadIndex: isSet(object.fifoHeadIndex) ? String(object.fifoHeadIndex) : "",
+      fifoTailIndex: isSet(object.fifoTailIndex) ? String(object.fifoTailIndex) : "",
+    };
   },
 
   toJSON(message: SystemInfo): unknown {
     const obj: any = {};
     message.nextId !== undefined && (obj.nextId = Math.round(message.nextId));
+    message.fifoHeadIndex !== undefined && (obj.fifoHeadIndex = message.fifoHeadIndex);
+    message.fifoTailIndex !== undefined && (obj.fifoTailIndex = message.fifoTailIndex);
     return obj;
   },
 
   fromPartial<I extends Exact<DeepPartial<SystemInfo>, I>>(object: I): SystemInfo {
     const message = createBaseSystemInfo();
     message.nextId = object.nextId ?? 0;
+    message.fifoHeadIndex = object.fifoHeadIndex ?? "";
+    message.fifoTailIndex = object.fifoTailIndex ?? "";
     return message;
   },
 };
 
 function createBaseStoredGame(): StoredGame {
-  return { index: "", board: "", turn: "", black: "", red: "", moveCount: 0 };
+  return { index: "", board: "", turn: "", black: "", red: "", moveCount: 0, beforeIndex: "", afterIndex: "" };
 }
 
 export const StoredGame = {
@@ -87,6 +115,12 @@ export const StoredGame = {
     }
     if (message.moveCount !== 0) {
       writer.uint32(48).uint64(message.moveCount);
+    }
+    if (message.beforeIndex !== "") {
+      writer.uint32(58).string(message.beforeIndex);
+    }
+    if (message.afterIndex !== "") {
+      writer.uint32(66).string(message.afterIndex);
     }
     return writer;
   },
@@ -116,6 +150,12 @@ export const StoredGame = {
         case 6:
           message.moveCount = longToNumber(reader.uint64() as Long);
           break;
+        case 7:
+          message.beforeIndex = reader.string();
+          break;
+        case 8:
+          message.afterIndex = reader.string();
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -132,6 +172,8 @@ export const StoredGame = {
       black: isSet(object.black) ? String(object.black) : "",
       red: isSet(object.red) ? String(object.red) : "",
       moveCount: isSet(object.moveCount) ? Number(object.moveCount) : 0,
+      beforeIndex: isSet(object.beforeIndex) ? String(object.beforeIndex) : "",
+      afterIndex: isSet(object.afterIndex) ? String(object.afterIndex) : "",
     };
   },
 
@@ -143,6 +185,8 @@ export const StoredGame = {
     message.black !== undefined && (obj.black = message.black);
     message.red !== undefined && (obj.red = message.red);
     message.moveCount !== undefined && (obj.moveCount = Math.round(message.moveCount));
+    message.beforeIndex !== undefined && (obj.beforeIndex = message.beforeIndex);
+    message.afterIndex !== undefined && (obj.afterIndex = message.afterIndex);
     return obj;
   },
 
@@ -154,6 +198,8 @@ export const StoredGame = {
     message.black = object.black ?? "";
     message.red = object.red ?? "";
     message.moveCount = object.moveCount ?? 0;
+    message.beforeIndex = object.beforeIndex ?? "";
+    message.afterIndex = object.afterIndex ?? "";
     return message;
   },
 };
