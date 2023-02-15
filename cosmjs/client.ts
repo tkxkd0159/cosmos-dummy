@@ -1,6 +1,6 @@
 import {
     IndexedTx, StargateClient, SigningStargateClient, SigningStargateClientOptions, QueryClient, DeliverTxResponse, GasPrice,
-    setupAuthExtension, setupBankExtension, setupStakingExtension, setupDistributionExtension, setupTxExtension, AuthExtension, BankExtension, StakingExtension, DistributionExtension, TxExtension,
+    setupAuthExtension, setupBankExtension, setupStakingExtension, setupDistributionExtension, setupTxExtension,
 } from "@cosmjs/stargate"
 import {Tendermint34Client} from "@cosmjs/tendermint-rpc"
 import {OfflineDirectSigner, EncodeObject} from "@cosmjs/proto-signing"
@@ -8,7 +8,7 @@ import {MsgSend} from "cosmjs-types/cosmos/bank/v1beta1/tx"
 import {Tx} from "cosmjs-types/cosmos/tx/v1beta1/tx"
 import {Coin} from "cosmjs-types/cosmos/base/v1beta1/coin"
 import {WalletFromMnemonic} from "./wallet"
-import {CheckerExtension, setupCheckerExtension, genCustomRegistry} from "./extension"
+import {CustomQuerier, setupCheckerExtension, genCustomRegistry} from "./extension"
 
 const queryTx = async (rpc: string, txid: string): Promise<void> => {
     const client = await StargateClient.connect(rpc)
@@ -64,8 +64,6 @@ const sendTokens = async (rpc: string): Promise<DeliverTxResponse> => {
 
     return res
 }
-
-type CustomQuerier = QueryClient & CheckerExtension & AuthExtension & BankExtension & StakingExtension & DistributionExtension & TxExtension
 
 class SuperCosmosClient {
     signer!: OfflineDirectSigner
