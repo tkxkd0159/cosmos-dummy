@@ -59,3 +59,23 @@ func FormatDeadline(deadline time.Time) string {
 func GetNextDeadline(ctx sdk.Context) time.Time {
 	return ctx.BlockTime().Add(MaxTurnDuration)
 }
+
+func (storedGame *StoredGame) GetPlayerAddress(color string) (address sdk.AccAddress, found bool, err error) {
+	black, err := storedGame.GetBlackAddress()
+	if err != nil {
+		return nil, false, err
+	}
+	red, err := storedGame.GetRedAddress()
+	if err != nil {
+		return nil, false, err
+	}
+	address, found = map[string]sdk.AccAddress{
+		rules.PieceStrings[rules.BLACK_PLAYER]: black,
+		rules.PieceStrings[rules.RED_PLAYER]:   red,
+	}[color]
+	return address, found, nil
+}
+
+func (storedGame *StoredGame) GetWinnerAddress() (address sdk.AccAddress, found bool, err error) {
+	return storedGame.GetPlayerAddress(storedGame.Winner)
+}

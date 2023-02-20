@@ -16,6 +16,7 @@ message EventMove {
   int64 captured_x = 3;
   int64 captured_y = 4;
   string winner = 5;
+  string board = 6;
 }
 
 message EventRejectGame {

@@ -650,6 +650,7 @@ func (suite *MsgSrvTestSuite) TestRejectMiddleGameHasSavedFifo() {
 		BeforeIndex: "-1",
 		AfterIndex:  "3",
 		Deadline:    types.FormatDeadline(ctx.BlockTime().Add(types.MaxTurnDuration)),
+		Winner:      "*",
 	}, game1)
 	game3, found := keeper.GetStoredGame(ctx, "3")
 	require.True(t, found)
@@ -663,5 +664,55 @@ func (suite *MsgSrvTestSuite) TestRejectMiddleGameHasSavedFifo() {
 		BeforeIndex: "1",
 		AfterIndex:  "-1",
 		Deadline:    types.FormatDeadline(ctx.BlockTime().Add(types.MaxTurnDuration)),
+		Winner:      "*",
 	}, game3)
+}
+
+func (suite *MsgSrvTestSuite) TestPlayMoveUpToWinner() {
+	msgSrvr := suite.msgSrv
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	goCtx := suite.ctx
+	t := suite.T()
+
+	testutil.PlayAllMoves(suite.T(), msgSrvr, goCtx, "1", testutil.Game1Moves)
+
+	systemInfo, found := suite.k.GetSystemInfo(ctx)
+	require.True(t, found)
+	require.EqualValues(t, types.SystemInfo{
+		NextId:        2,
+		FifoHeadIndex: "-1",
+		FifoTailIndex: "-1",
+	}, systemInfo)
+
+	game, found := suite.k.GetStoredGame(ctx, "1")
+	require.True(t, found)
+	require.EqualValues(t, types.StoredGame{
+		Index:       "1",
+		Board:       "",
+		Turn:        "b",
+		Black:       bob,
+		Red:         carol,
+		MoveCount:   uint64(len(testutil.Game1Moves)),
+		BeforeIndex: "-1",
+		AfterIndex:  "-1",
+		Deadline:    types.FormatDeadline(ctx.BlockTime().Add(types.MaxTurnDuration)),
+		Winner:      "b",
+	}, game)
+
+	var cachedEvt sdk.StringEvent
+	for _, e := range ctx.EventManager().ABCIEvents() {
+		cachedEvt = sdk.StringifyEvent(e)
+	}
+
+	require.EqualValues(t, sdk.StringEvent{
+		Type: "checkers.checkers.EventMove",
+		Attributes: []sdk.Attribute{
+			{Key: "board", Value: "\"*b*b****|**b*b***|*****b**|********|***B****|********|*****b**|********\""},
+			{Key: "captured_x", Value: "\"2\""},
+			{Key: "captured_y", Value: "\"5\""},
+			{Key: "creator", Value: "\"cosmos1xyxs3skf3f4jfqeuv89yyaqvjc6lffavxqhc8g\""},
+			{Key: "game_index", Value: "\"1\""},
+			{Key: "winner", Value: "\"b\""},
+		},
+	}, cachedEvt)
 }

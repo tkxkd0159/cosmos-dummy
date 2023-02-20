@@ -43,6 +43,7 @@ func (k msgServer) CreateGame(goCtx context.Context, msg *types.MsgCreateGame) (
 		BeforeIndex: types.NoFifoIndex,
 		AfterIndex:  types.NoFifoIndex,
 		Deadline:    types.FormatDeadline(types.GetNextDeadline(ctx)),
+		Winner:      rules.PieceStrings[rules.NO_PLAYER],
 	}
 
 	err := storedGame.Validate()
@@ -74,6 +75,9 @@ func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*typ
 	storedGame, found := k.Keeper.GetStoredGame(ctx, msg.GameIndex)
 	if !found {
 		return nil, sdkerrors.Wrapf(types.ErrGameNotFound, "%s", msg.GameIndex)
+	}
+	if storedGame.Winner != rules.PieceStrings[rules.NO_PLAYER] {
+		return nil, types.ErrGameFinished
 	}
 
 	isBlack := storedGame.Black == msg.Creator
@@ -112,15 +116,23 @@ func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*typ
 		return nil, sdkerrors.Wrapf(types.ErrWrongMove, moveErr.Error())
 	}
 
+	storedGame.Winner = rules.PieceStrings[game.Winner()]
 	systemInfo, found := k.Keeper.GetSystemInfo(ctx)
 	if !found {
 		panic("SystemInfo not found")
 	}
-	k.Keeper.SendToFifoTail(ctx, &storedGame, &systemInfo)
+
+	lastBoard := game.String()
+	if storedGame.Winner == rules.PieceStrings[rules.NO_PLAYER] {
+		k.Keeper.SendToFifoTail(ctx, &storedGame, &systemInfo)
+		storedGame.Board = lastBoard
+	} else {
+		k.Keeper.RemoveFromFifo(ctx, &storedGame, &systemInfo)
+		storedGame.Board = ""
+	}
 
 	storedGame.MoveCount++
 	storedGame.Deadline = types.FormatDeadline(types.GetNextDeadline(ctx))
-	storedGame.Board = game.String()
 	storedGame.Turn = rules.PieceStrings[game.Turn]
 	k.Keeper.SetStoredGame(ctx, storedGame)
 	k.Keeper.SetSystemInfo(ctx, systemInfo)
@@ -132,6 +144,7 @@ func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*typ
 			CapturedX: int64(captured.X),
 			CapturedY: int64(captured.Y),
 			Winner:    rules.PieceStrings[game.Winner()],
+			Board:     lastBoard,
 		})
 
 	return &types.MsgPlayMoveResponse{
@@ -147,6 +160,9 @@ func (k msgServer) RejectGame(goCtx context.Context, msg *types.MsgRejectGame) (
 	storedGame, found := k.Keeper.GetStoredGame(ctx, msg.GameIndex)
 	if !found {
 		return nil, sdkerrors.Wrapf(types.ErrGameNotFound, "%s", msg.GameIndex)
+	}
+	if storedGame.Winner != rules.PieceStrings[rules.NO_PLAYER] {
+		return nil, types.ErrGameFinished
 	}
 
 	if storedGame.Black == msg.Creator {

@@ -147,19 +147,19 @@ func (game *Game) TurnIs(player Player) bool {
 }
 
 func (game *Game) Winner() Player {
-	red_count := 0
-	black_count := 0
+	redCount := 0
+	blackCount := 0
 	for _, piece := range game.Pieces {
 		switch {
 		case piece.Player == BLACK_PLAYER:
-			black_count += 1
+			blackCount += 1
 		case piece.Player == RED_PLAYER:
-			red_count += 1
+			redCount += 1
 		}
 	}
-	if black_count > 0 && red_count <= 0 {
+	if blackCount > 0 && redCount <= 0 {
 		return BLACK_PLAYER
-	} else if red_count > 0 && black_count <= 0 {
+	} else if redCount > 0 && blackCount <= 0 {
 		return RED_PLAYER
 	}
 	return NO_PLAYER
