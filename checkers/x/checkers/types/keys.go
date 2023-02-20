@@ -1,5 +1,10 @@
 package types
 
+import (
+	"encoding/binary"
+	"time"
+)
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "checkers"
@@ -18,10 +23,31 @@ func KeyPrefix(p string) []byte {
 	return []byte(p)
 }
 
-const (
-	SystemInfoKey = "SystemInfo/value/"
+// StoredGameKey returns the store key to retrieve a StoredGame from the index fields
+func StoredGameKey(
+	index string,
+) []byte {
+	var key []byte
 
-	NoFifoIndex = "-1"
+	indexBytes := []byte(index)
+	key = append(key, indexBytes...)
+	key = append(key, []byte("/")...)
+
+	return key
+}
+
+var _ binary.ByteOrder
+
+const (
+	// StoredGameKeyPrefix is the prefix to retrieve all StoredGame
+	StoredGameKeyPrefix = "StoredGame/value/"
+	SystemInfoKey       = "SystemInfo/value/"
+)
+
+const (
+	NoFifoIndex           = "-1"
+	MaxTurnDuration       = time.Duration(24 * 3_600 * 1000_000_000) // 1 day
+	DefaultDeadlineLayout = "2006-01-02 15:04:05.999999999 +0000 UTC"
 )
 
 const (

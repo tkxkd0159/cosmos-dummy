@@ -32,6 +32,7 @@ type MsgSrvTestSuite struct {
 	ctx    context.Context
 }
 
+// Initialize genesis & Create first game
 func (suite *MsgSrvTestSuite) SetupTest() {
 	k, ctx := keepertest.CheckersKeeper(suite.T())
 	checkers.InitGenesis(ctx, *k, *types.DefaultGenesis())
@@ -611,22 +612,22 @@ func (suite *MsgSrvTestSuite) TestPlayMove2Games2MovesHasSavedFifo() {
 
 func (suite *MsgSrvTestSuite) TestRejectMiddleGameHasSavedFifo() {
 	msgSrvr := suite.msgSrv
-	context := suite.ctx
+	ctx := sdk.UnwrapSDKContext(suite.ctx)
+	goCtx := suite.ctx
 	keeper := suite.k
 	t := suite.T()
 
-	ctx := sdk.UnwrapSDKContext(context)
-	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+	msgSrvr.CreateGame(goCtx, &types.MsgCreateGame{
 		Creator: bob,
 		Black:   carol,
 		Red:     alice,
 	})
-	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+	msgSrvr.CreateGame(goCtx, &types.MsgCreateGame{
 		Creator: carol,
 		Black:   alice,
 		Red:     bob,
 	})
-	msgSrvr.RejectGame(context, &types.MsgRejectGame{
+	msgSrvr.RejectGame(goCtx, &types.MsgRejectGame{
 		Creator:   carol,
 		GameIndex: "2",
 	})
@@ -648,6 +649,7 @@ func (suite *MsgSrvTestSuite) TestRejectMiddleGameHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "-1",
 		AfterIndex:  "3",
+		Deadline:    types.FormatDeadline(ctx.BlockTime().Add(types.MaxTurnDuration)),
 	}, game1)
 	game3, found := keeper.GetStoredGame(ctx, "3")
 	require.True(t, found)
@@ -660,5 +662,6 @@ func (suite *MsgSrvTestSuite) TestRejectMiddleGameHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "1",
 		AfterIndex:  "-1",
+		Deadline:    types.FormatDeadline(ctx.BlockTime().Add(types.MaxTurnDuration)),
 	}, game3)
 }

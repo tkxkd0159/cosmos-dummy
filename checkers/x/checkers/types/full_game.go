@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -10,17 +11,17 @@ import (
 	"checkers/x/checkers/rules"
 )
 
-func (storedGame StoredGame) GetBlackAddress() (black sdk.AccAddress, err error) {
+func (storedGame *StoredGame) GetBlackAddress() (black sdk.AccAddress, err error) {
 	black, errBlack := sdk.AccAddressFromBech32(storedGame.Black)
 	return black, sdkerrors.Wrapf(errBlack, ErrInvalidBlack.Error(), storedGame.Black)
 }
 
-func (storedGame StoredGame) GetRedAddress() (red sdk.AccAddress, err error) {
+func (storedGame *StoredGame) GetRedAddress() (red sdk.AccAddress, err error) {
 	red, errRed := sdk.AccAddressFromBech32(storedGame.Red)
 	return red, sdkerrors.Wrapf(errRed, ErrInvalidRed.Error(), storedGame.Red)
 }
 
-func (storedGame StoredGame) ParseGame() (game *rules.Game, err error) {
+func (storedGame *StoredGame) ParseGame() (game *rules.Game, err error) {
 	board, errBoard := rules.Parse(storedGame.Board)
 	if errBoard != nil {
 		return nil, sdkerrors.Wrapf(errBoard, ErrGameNotParseable.Error())
@@ -32,7 +33,7 @@ func (storedGame StoredGame) ParseGame() (game *rules.Game, err error) {
 	return board, nil
 }
 
-func (storedGame StoredGame) Validate() (err error) {
+func (storedGame *StoredGame) Validate() (err error) {
 	_, err = storedGame.GetBlackAddress()
 	if err != nil {
 		return err
@@ -42,5 +43,19 @@ func (storedGame StoredGame) Validate() (err error) {
 		return err
 	}
 	_, err = storedGame.ParseGame()
+	_, err = storedGame.GetDeadlineAsTime()
 	return err
+}
+
+func (storedGame *StoredGame) GetDeadlineAsTime() (deadline time.Time, err error) {
+	deadline, errDeadline := time.Parse(DefaultDeadlineLayout, storedGame.Deadline)
+	return deadline, sdkerrors.Wrapf(errDeadline, ErrInvalidDeadline.Error(), storedGame.Deadline)
+}
+
+func FormatDeadline(deadline time.Time) string {
+	return deadline.UTC().Format(DefaultDeadlineLayout) // or time.RFC3339Nano
+}
+
+func GetNextDeadline(ctx sdk.Context) time.Time {
+	return ctx.BlockTime().Add(MaxTurnDuration)
 }

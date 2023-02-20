@@ -7,7 +7,7 @@ export const protobufPackage = "checkers.checkers";
 export interface EventCreateGame {
   creator: string;
   gameIndex: string;
-  block: string;
+  black: string;
   red: string;
 }
 
@@ -25,7 +25,7 @@ export interface EventRejectGame {
 }
 
 function createBaseEventCreateGame(): EventCreateGame {
-  return { creator: "", gameIndex: "", block: "", red: "" };
+  return { creator: "", gameIndex: "", black: "", red: "" };
 }
 
 export const EventCreateGame = {
@@ -36,8 +36,8 @@ export const EventCreateGame = {
     if (message.gameIndex !== "") {
       writer.uint32(18).string(message.gameIndex);
     }
-    if (message.block !== "") {
-      writer.uint32(26).string(message.block);
+    if (message.black !== "") {
+      writer.uint32(26).string(message.black);
     }
     if (message.red !== "") {
       writer.uint32(34).string(message.red);
@@ -59,7 +59,7 @@ export const EventCreateGame = {
           message.gameIndex = reader.string();
           break;
         case 3:
-          message.block = reader.string();
+          message.black = reader.string();
           break;
         case 4:
           message.red = reader.string();
@@ -76,7 +76,7 @@ export const EventCreateGame = {
     return {
       creator: isSet(object.creator) ? String(object.creator) : "",
       gameIndex: isSet(object.gameIndex) ? String(object.gameIndex) : "",
-      block: isSet(object.block) ? String(object.block) : "",
+      black: isSet(object.black) ? String(object.black) : "",
       red: isSet(object.red) ? String(object.red) : "",
     };
   },
@@ -85,7 +85,7 @@ export const EventCreateGame = {
     const obj: any = {};
     message.creator !== undefined && (obj.creator = message.creator);
     message.gameIndex !== undefined && (obj.gameIndex = message.gameIndex);
-    message.block !== undefined && (obj.block = message.block);
+    message.black !== undefined && (obj.black = message.black);
     message.red !== undefined && (obj.red = message.red);
     return obj;
   },
@@ -94,7 +94,7 @@ export const EventCreateGame = {
     const message = createBaseEventCreateGame();
     message.creator = object.creator ?? "";
     message.gameIndex = object.gameIndex ?? "";
-    message.block = object.block ?? "";
+    message.black = object.black ?? "";
     message.red = object.red ?? "";
     return message;
   },

@@ -3,16 +3,29 @@ package cli
 import (
 	"context"
 
-	"checkers/x/checkers/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+
+	"checkers/x/checkers/types"
 )
 
 func CmdListStoredGame() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-stored-game",
 		Short: "list all storedGame",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			if clientCtx.Height == 0 || cmd.Flags().Changed(flags.FlagHeight) {
+				height, _ := cmd.Flags().GetInt64(flags.FlagHeight)
+				clientCtx = clientCtx.WithHeight(height)
+			}
+			err := client.SetCmdClientContext(cmd, clientCtx)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 

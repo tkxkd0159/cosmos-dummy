@@ -80,6 +80,10 @@ ignite chain serve --reset-once
 
 # 3) recompile proto
 ignite generate proto-go
+
+# 4) build & restart (state preservation)
+ignite chain build
+<app>d start
 ```
 
 ## Learn more

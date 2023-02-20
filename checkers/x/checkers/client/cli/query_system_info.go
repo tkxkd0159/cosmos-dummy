@@ -3,10 +3,11 @@ package cli
 import (
 	"context"
 
-	"checkers/x/checkers/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+
+	"checkers/x/checkers/types"
 )
 
 func CmdShowSystemInfo() *cobra.Command {

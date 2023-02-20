@@ -17,8 +17,8 @@ const (
 	bob   = testutil.Bob
 )
 
-func GetStoredGame1() types.StoredGame {
-	return types.StoredGame{
+func GetStoredGame1() *types.StoredGame {
+	return &types.StoredGame{
 		Black: alice,
 		Red:   bob,
 		Index: "1",

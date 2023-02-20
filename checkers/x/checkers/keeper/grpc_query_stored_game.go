@@ -3,12 +3,13 @@ package keeper
 import (
 	"context"
 
-	"checkers/x/checkers/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"checkers/x/checkers/types"
 )
 
 func (k Keeper) StoredGameAll(c context.Context, req *types.QueryAllStoredGameRequest) (*types.QueryAllStoredGameResponse, error) {

@@ -6,7 +6,7 @@ option go_package = "checkers/x/checkers/types";
 message EventCreateGame {
   string creator = 1;
   string game_index = 2;
-  string block = 3;
+  string black = 3;
   string red = 4;
 }
 
