@@ -23,3 +23,9 @@ message EventRejectGame {
   string creator = 1;
   string game_index = 2;
 }
+
+message EventForfeitGame {
+  string game_index = 1;
+  string winner = 2;
+  string board = 3;
+}

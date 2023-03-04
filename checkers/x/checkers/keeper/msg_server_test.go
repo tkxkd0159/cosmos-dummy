@@ -82,6 +82,8 @@ func (suite *MsgSrvTestSuite) TestCreate1GameHasSaved() {
 		Red:         carol,
 		BeforeIndex: "-1",
 		AfterIndex:  "2",
+		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Winner:      "*",
 	}, game1)
 }
 
@@ -186,6 +188,8 @@ func (suite *MsgSrvTestSuite) TestPlayMoveSavedGame() {
 		MoveCount:   1,
 		BeforeIndex: "-1",
 		AfterIndex:  "-1",
+		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Winner:      "*",
 	}, game1)
 }
 
@@ -309,6 +313,8 @@ func (suite *MsgSrvTestSuite) TestPlayMove2SavedGame() {
 		MoveCount:   2,
 		BeforeIndex: "-1",
 		AfterIndex:  "-1",
+		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Winner:      "*",
 	}, game1)
 }
 
@@ -389,6 +395,8 @@ func (suite *MsgSrvTestSuite) TestPlayMove3SavedGame() {
 		MoveCount:   3,
 		BeforeIndex: "-1",
 		AfterIndex:  "-1",
+		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Winner:      "*",
 	}, game1)
 }
 
@@ -416,12 +424,13 @@ func (suite *MsgSrvTestSuite) TestPlayMove2Emitted() {
 	event := events[1]
 	require.Equal(suite.T(), "checkers.checkers.EventMove", event.Type)
 	require.EqualValues(suite.T(), []sdk.Attribute{
+		{Key: "board", Value: "\"*b*b*b*b|b*b*b*b*|***b*b*b|**b*****|*r******|**r*r*r*|*r*r*r*r|r*r*r*r*\""},
 		{Key: "captured_x", Value: "\"-1\""},
 		{Key: "captured_y", Value: "\"-1\""},
 		{Key: "creator", Value: "\"cosmos1e0w5t53nrq7p66fye6c8p0ynyhf6y24l4yuxd7\""},
 		{Key: "game_index", Value: "\"1\""},
 		{Key: "winner", Value: "\"*\""},
-	}, event.Attributes[5:])
+	}, event.Attributes[6:])
 }
 
 func (suite *MsgSrvTestSuite) TestRejectGameByRedOneMoveRemovedGame() {
@@ -450,18 +459,18 @@ func (suite *MsgSrvTestSuite) TestRejectGameByRedOneMoveRemovedGame() {
 
 func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
 	msgSrvr := suite.msgSrv
-	context := suite.ctx
+	goCtx := suite.ctx
 	keeper := suite.k
 	t := suite.T()
 
-	ctx := sdk.UnwrapSDKContext(context)
-	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	msgSrvr.CreateGame(goCtx, &types.MsgCreateGame{
 		Creator: alice,
 		Black:   bob,
 		Red:     carol,
 	})
 
-	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+	msgSrvr.CreateGame(goCtx, &types.MsgCreateGame{
 		Creator: bob,
 		Black:   carol,
 		Red:     alice,
@@ -484,6 +493,8 @@ func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "-1",
 		AfterIndex:  "2",
+		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Winner:      "*",
 	}, game1)
 	game2, found := keeper.GetStoredGame(ctx, "2")
 	require.True(t, found)
@@ -496,9 +507,11 @@ func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "1",
 		AfterIndex:  "3",
+		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Winner:      "*",
 	}, game2)
 
-	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+	msgSrvr.CreateGame(goCtx, &types.MsgCreateGame{
 		Creator: carol,
 		Black:   alice,
 		Red:     bob,
@@ -521,6 +534,8 @@ func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "-1",
 		AfterIndex:  "2",
+		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Winner:      "*",
 	}, game1)
 	game2, found = keeper.GetStoredGame(ctx, "2")
 	require.True(t, found)
@@ -533,6 +548,8 @@ func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "1",
 		AfterIndex:  "3",
+		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Winner:      "*",
 	}, game2)
 	game3, found := keeper.GetStoredGame(ctx, "3")
 	require.True(t, found)
@@ -545,22 +562,24 @@ func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "2",
 		AfterIndex:  "4",
+		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Winner:      "*",
 	}, game3)
 }
 
 func (suite *MsgSrvTestSuite) TestPlayMove2Games2MovesHasSavedFifo() {
 	msgSrvr := suite.msgSrv
-	context := suite.ctx
+	goCtx := suite.ctx
 	keeper := suite.k
 	t := suite.T()
 
-	ctx := sdk.UnwrapSDKContext(context)
-	msgSrvr.CreateGame(context, &types.MsgCreateGame{
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	msgSrvr.CreateGame(goCtx, &types.MsgCreateGame{
 		Creator: bob,
 		Black:   carol,
 		Red:     alice,
 	})
-	msgSrvr.PlayMove(context, &types.MsgPlayMove{
+	msgSrvr.PlayMove(goCtx, &types.MsgPlayMove{
 		Creator:   bob,
 		GameIndex: "1",
 		FromX:     1,
@@ -569,7 +588,7 @@ func (suite *MsgSrvTestSuite) TestPlayMove2Games2MovesHasSavedFifo() {
 		ToY:       3,
 	})
 
-	msgSrvr.PlayMove(context, &types.MsgPlayMove{
+	msgSrvr.PlayMove(goCtx, &types.MsgPlayMove{
 		Creator:   carol,
 		GameIndex: "2",
 		FromX:     1,
@@ -595,6 +614,8 @@ func (suite *MsgSrvTestSuite) TestPlayMove2Games2MovesHasSavedFifo() {
 		MoveCount:   uint64(1),
 		BeforeIndex: "-1",
 		AfterIndex:  "2",
+		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Winner:      "*",
 	}, game1)
 	game2, found := keeper.GetStoredGame(ctx, "2")
 	require.True(t, found)
@@ -607,6 +628,8 @@ func (suite *MsgSrvTestSuite) TestPlayMove2Games2MovesHasSavedFifo() {
 		MoveCount:   uint64(1),
 		BeforeIndex: "1",
 		AfterIndex:  "-1",
+		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Winner:      "*",
 	}, game2)
 }
 
@@ -649,7 +672,7 @@ func (suite *MsgSrvTestSuite) TestRejectMiddleGameHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "-1",
 		AfterIndex:  "3",
-		Deadline:    types.FormatDeadline(ctx.BlockTime().Add(types.MaxTurnDuration)),
+		Deadline:    types.FormatDeadline(ctx.BlockTime().Add(types.MaxTurnDuration1Min)),
 		Winner:      "*",
 	}, game1)
 	game3, found := keeper.GetStoredGame(ctx, "3")
@@ -663,7 +686,7 @@ func (suite *MsgSrvTestSuite) TestRejectMiddleGameHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "1",
 		AfterIndex:  "-1",
-		Deadline:    types.FormatDeadline(ctx.BlockTime().Add(types.MaxTurnDuration)),
+		Deadline:    types.FormatDeadline(ctx.BlockTime().Add(types.MaxTurnDuration1Min)),
 		Winner:      "*",
 	}, game3)
 }
@@ -695,7 +718,7 @@ func (suite *MsgSrvTestSuite) TestPlayMoveUpToWinner() {
 		MoveCount:   uint64(len(testutil.Game1Moves)),
 		BeforeIndex: "-1",
 		AfterIndex:  "-1",
-		Deadline:    types.FormatDeadline(ctx.BlockTime().Add(types.MaxTurnDuration)),
+		Deadline:    types.FormatDeadline(ctx.BlockTime().Add(types.MaxTurnDuration1Min)),
 		Winner:      "b",
 	}, game)
 

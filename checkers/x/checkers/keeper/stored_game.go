@@ -1,9 +1,12 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"checkers/x/checkers/rules"
 	"checkers/x/checkers/types"
 )
 
@@ -126,4 +129,65 @@ func (k Keeper) SendToFifoTail(ctx sdk.Context, game *types.StoredGame, info *ty
 		game.BeforeIndex = currentTail.Index
 		info.FifoTailIndex = game.Index
 	}
+}
+
+func (k Keeper) ForfeitExpiredGames(ctx sdk.Context) {
+	opponents := map[string]string{
+		rules.PieceStrings[rules.BLACK_PLAYER]: rules.PieceStrings[rules.RED_PLAYER],
+		rules.PieceStrings[rules.RED_PLAYER]:   rules.PieceStrings[rules.BLACK_PLAYER],
+	}
+
+	systemInfo, found := k.GetSystemInfo(ctx)
+	if !found {
+		panic("SystemInfo not found")
+	}
+
+	gameIndex := systemInfo.FifoHeadIndex
+	var storedGame types.StoredGame
+	for {
+		// Finished moving along
+		if gameIndex == types.NoFifoIndex {
+			break
+		}
+		storedGame, found = k.GetStoredGame(ctx, gameIndex)
+		if !found {
+			panic("Fifo head game not found " + systemInfo.FifoHeadIndex)
+		}
+		deadline, err := storedGame.GetDeadlineAsTime()
+		if err != nil {
+			panic(err)
+		}
+		if deadline.Before(ctx.BlockTime()) {
+			// Game is past deadline
+			k.RemoveFromFifo(ctx, &storedGame, &systemInfo)
+			lastBoard := storedGame.Board
+			if storedGame.MoveCount <= 1 {
+				// No point in keeping a game that was never really played
+				k.RemoveStoredGame(ctx, gameIndex)
+			} else {
+				storedGame.Winner, found = opponents[storedGame.Turn]
+				if !found {
+					panic(fmt.Sprintf(types.ErrCannotFindWinnerByColor.Error(), storedGame.Turn))
+				}
+				storedGame.Board = ""
+				k.SetStoredGame(ctx, storedGame)
+			}
+			ctx.EventManager().EmitTypedEvent(
+				&types.EventForfeitGame{
+					GameIndex: gameIndex,
+					Winner:    storedGame.Winner,
+					Board:     lastBoard,
+				})
+
+			// Move along FIFO
+			gameIndex = systemInfo.FifoHeadIndex
+		} else {
+			// All other games after are active anyway
+			// Bc the deadline is extended whenever you do PlayMove (1m)
+			// At the same time, this game is moved to the end of the FIFO queue
+			break
+		}
+	}
+
+	k.SetSystemInfo(ctx, systemInfo)
 }

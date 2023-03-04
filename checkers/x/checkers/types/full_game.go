@@ -57,7 +57,7 @@ func FormatDeadline(deadline time.Time) string {
 }
 
 func GetNextDeadline(ctx sdk.Context) time.Time {
-	return ctx.BlockTime().Add(MaxTurnDuration)
+	return ctx.BlockTime().Add(MaxTurnDuration1Min)
 }
 
 func (storedGame *StoredGame) GetPlayerAddress(color string) (address sdk.AccAddress, found bool, err error) {

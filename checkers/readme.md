@@ -54,20 +54,9 @@ curl https://get.ignite.com/username/checkers@latest! | sudo bash
 ```shell
 ignite scaffold single systemInfo nextId:uint --module checkers --no-message
 ignite scaffold map storedGame board turn black red --index index --module checkers --no-message
+
 ignite scaffold message createGame black red --module checkers --response gameIndex
-
-export alice=$(checkersd keys show alice -a)
-export bob=$(checkersd keys show bob -a)
-checkersd tx checkers create-game $alice $bob --from $alice --dry-run
-checkersd tx checkers create-game $alice $bob --from $alice --broadcast-mode block
-checkersd query checkers show-stored-game 1 --output json | jq ".storedGame.board" | sed 's/"//g' | sed 's/|/\n/g'
-
 ignite scaffold message playMove gameIndex fromX:uint fromY:uint toX:uint toY:uint --module checkers --response capturedX:int,capturedY:int,winner
-checkersd tx checkers play-move 1 0 5 1 4 --from $bob   # out of turn
-checkersd tx checkers play-move 1 1 0 0 1 --from $alice # wrong move
-checkersd tx checkers play-move 1 1 2 2 3 --from $alice # success
-checkersd query checkers show-stored-game 1 --output json | jq ".storedGame.board" | sed 's/"//g' | sed 's/|/\n/g' # check alice's piece
-
 ignite scaffold message rejectGame gameIndex --module checkers
 checkersd tx checkers reject-game 1 --from $bob
 
@@ -84,6 +73,38 @@ ignite generate proto-go
 # 4) build & restart (state preservation)
 ignite chain build
 <app>d start
+```
+
+# Scenarios
+## 1) Basic
+```shell
+export alice=$(checkersd keys show alice -a)
+export bob=$(checkersd keys show bob -a)
+checkersd tx checkers create-game $alice $bob --from $alice --dry-run
+checkersd tx checkers create-game $alice $bob --from $alice --broadcast-mode block
+checkersd query checkers show-stored-game 1 --output json | jq ".storedGame.board" | sed 's/"//g' | sed 's/|/\n/g'
+
+checkersd tx checkers play-move 1 0 5 1 4 --from $bob   # out of turn
+checkersd tx checkers play-move 1 1 0 0 1 --from $alice # wrong move
+checkersd tx checkers play-move 1 1 2 2 3 --from $alice # success
+checkersd query checkers show-stored-game 1 --output json | jq ".storedGame.board" | sed 's/"//g' | sed 's/|/\n/g' # check alice's piece
+```
+
+## 2) Expire
+```shell
+ignite chain serve --reset-once
+
+checkersd tx checkers create-game $alice $bob --from $alice
+
+checkersd tx checkers create-game $alice $bob --from $bob
+checkersd tx checkers play-move 2 1 2 2 3 --from $alice
+
+checkersd tx checkers create-game $alice $bob --from $alice
+checkersd tx checkers play-move 3 1 2 2 3 --from $alice
+checkersd tx checkers play-move 3 0 5 1 4 --from $bob
+
+checkersd query checkers show-system-info
+checkersd query checkers list-stored-game
 ```
 
 ## Learn more
