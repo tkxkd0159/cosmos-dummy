@@ -10,16 +10,28 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	keepertest "checkers/testutil/keeper"
+	testkeeper "checkers/testutil/keeper"
 	"checkers/testutil/nullify"
+
 	"checkers/x/checkers/types"
 )
+
+func TestParamsQuery(t *testing.T) {
+	keeper, ctx := testkeeper.CheckersKeeper(t)
+	wctx := sdk.WrapSDKContext(ctx)
+	params := types.DefaultParams()
+	keeper.SetParams(ctx, params)
+
+	response, err := keeper.Params(wctx, &types.QueryParamsRequest{})
+	require.NoError(t, err)
+	require.Equal(t, &types.QueryParamsResponse{Params: params}, response)
+}
 
 // Prevent strconv unused error
 var _ = strconv.IntSize
 
 func TestStoredGameQuerySingle(t *testing.T) {
-	keeper, ctx := keepertest.CheckersKeeper(t)
+	keeper, ctx := testkeeper.CheckersKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNStoredGame(keeper, ctx, 2)
 	for _, tc := range []struct {
@@ -70,7 +82,7 @@ func TestStoredGameQuerySingle(t *testing.T) {
 }
 
 func TestStoredGameQueryPaginated(t *testing.T) {
-	keeper, ctx := keepertest.CheckersKeeper(t)
+	keeper, ctx := testkeeper.CheckersKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNStoredGame(keeper, ctx, 5)
 
@@ -123,4 +135,39 @@ func TestStoredGameQueryPaginated(t *testing.T) {
 		_, err := keeper.StoredGameAll(wctx, nil)
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
+}
+
+func TestSystemInfoQuery(t *testing.T) {
+	keeper, ctx := testkeeper.CheckersKeeper(t)
+	wctx := sdk.WrapSDKContext(ctx)
+	item := createTestSystemInfo(keeper, ctx)
+	for _, tc := range []struct {
+		desc     string
+		request  *types.QueryGetSystemInfoRequest
+		response *types.QueryGetSystemInfoResponse
+		err      error
+	}{
+		{
+			desc:     "First",
+			request:  &types.QueryGetSystemInfoRequest{},
+			response: &types.QueryGetSystemInfoResponse{SystemInfo: item},
+		},
+		{
+			desc: "InvalidRequest",
+			err:  status.Error(codes.InvalidArgument, "invalid request"),
+		},
+	} {
+		t.Run(tc.desc, func(t *testing.T) {
+			response, err := keeper.SystemInfo(wctx, tc.request)
+			if tc.err != nil {
+				require.ErrorIs(t, err, tc.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t,
+					nullify.Fill(tc.response),
+					nullify.Fill(response),
+				)
+			}
+		})
+	}
 }

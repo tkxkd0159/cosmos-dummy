@@ -76,6 +76,8 @@ paths:
                       title: Pertains to the FIFO. Toward tail
                     deadline:
                       type: string
+                    winner:
+                      type: string
               pagination:
                 type: object
                 properties:
@@ -214,6 +216,8 @@ paths:
                     type: string
                     title: Pertains to the FIFO. Toward tail
                   deadline:
+                    type: string
+                  winner:
                     type: string
         default:
           description: An unexpected error response.
@@ -45011,6 +45015,8 @@ definitions:
               title: Pertains to the FIFO. Toward tail
             deadline:
               type: string
+            winner:
+              type: string
       pagination:
         type: object
         properties:
@@ -45064,6 +45070,8 @@ definitions:
             title: Pertains to the FIFO. Toward tail
           deadline:
             type: string
+          winner:
+            type: string
   checkers.checkers.QueryGetSystemInfoResponse:
     type: object
     properties:
@@ -45109,6 +45117,8 @@ definitions:
         type: string
         title: Pertains to the FIFO. Toward tail
       deadline:
+        type: string
+      winner:
         type: string
   checkers.checkers.SystemInfo:
     type: object

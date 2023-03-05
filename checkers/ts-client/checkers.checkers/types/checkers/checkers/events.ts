@@ -17,11 +17,18 @@ export interface EventMove {
   capturedX: number;
   capturedY: number;
   winner: string;
+  board: string;
 }
 
 export interface EventRejectGame {
   creator: string;
   gameIndex: string;
+}
+
+export interface EventForfeitGame {
+  gameIndex: string;
+  winner: string;
+  board: string;
 }
 
 function createBaseEventCreateGame(): EventCreateGame {
@@ -101,7 +108,7 @@ export const EventCreateGame = {
 };
 
 function createBaseEventMove(): EventMove {
-  return { creator: "", gameIndex: "", capturedX: 0, capturedY: 0, winner: "" };
+  return { creator: "", gameIndex: "", capturedX: 0, capturedY: 0, winner: "", board: "" };
 }
 
 export const EventMove = {
@@ -120,6 +127,9 @@ export const EventMove = {
     }
     if (message.winner !== "") {
       writer.uint32(42).string(message.winner);
+    }
+    if (message.board !== "") {
+      writer.uint32(50).string(message.board);
     }
     return writer;
   },
@@ -146,6 +156,9 @@ export const EventMove = {
         case 5:
           message.winner = reader.string();
           break;
+        case 6:
+          message.board = reader.string();
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -161,6 +174,7 @@ export const EventMove = {
       capturedX: isSet(object.capturedX) ? Number(object.capturedX) : 0,
       capturedY: isSet(object.capturedY) ? Number(object.capturedY) : 0,
       winner: isSet(object.winner) ? String(object.winner) : "",
+      board: isSet(object.board) ? String(object.board) : "",
     };
   },
 
@@ -171,6 +185,7 @@ export const EventMove = {
     message.capturedX !== undefined && (obj.capturedX = Math.round(message.capturedX));
     message.capturedY !== undefined && (obj.capturedY = Math.round(message.capturedY));
     message.winner !== undefined && (obj.winner = message.winner);
+    message.board !== undefined && (obj.board = message.board);
     return obj;
   },
 
@@ -181,6 +196,7 @@ export const EventMove = {
     message.capturedX = object.capturedX ?? 0;
     message.capturedY = object.capturedY ?? 0;
     message.winner = object.winner ?? "";
+    message.board = object.board ?? "";
     return message;
   },
 };
@@ -239,6 +255,73 @@ export const EventRejectGame = {
     const message = createBaseEventRejectGame();
     message.creator = object.creator ?? "";
     message.gameIndex = object.gameIndex ?? "";
+    return message;
+  },
+};
+
+function createBaseEventForfeitGame(): EventForfeitGame {
+  return { gameIndex: "", winner: "", board: "" };
+}
+
+export const EventForfeitGame = {
+  encode(message: EventForfeitGame, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.gameIndex !== "") {
+      writer.uint32(10).string(message.gameIndex);
+    }
+    if (message.winner !== "") {
+      writer.uint32(18).string(message.winner);
+    }
+    if (message.board !== "") {
+      writer.uint32(26).string(message.board);
+    }
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): EventForfeitGame {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseEventForfeitGame();
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.gameIndex = reader.string();
+          break;
+        case 2:
+          message.winner = reader.string();
+          break;
+        case 3:
+          message.board = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): EventForfeitGame {
+    return {
+      gameIndex: isSet(object.gameIndex) ? String(object.gameIndex) : "",
+      winner: isSet(object.winner) ? String(object.winner) : "",
+      board: isSet(object.board) ? String(object.board) : "",
+    };
+  },
+
+  toJSON(message: EventForfeitGame): unknown {
+    const obj: any = {};
+    message.gameIndex !== undefined && (obj.gameIndex = message.gameIndex);
+    message.winner !== undefined && (obj.winner = message.winner);
+    message.board !== undefined && (obj.board = message.board);
+    return obj;
+  },
+
+  fromPartial<I extends Exact<DeepPartial<EventForfeitGame>, I>>(object: I): EventForfeitGame {
+    const message = createBaseEventForfeitGame();
+    message.gameIndex = object.gameIndex ?? "";
+    message.winner = object.winner ?? "";
+    message.board = object.board ?? "";
     return message;
   },
 };

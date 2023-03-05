@@ -3,12 +3,13 @@ import { Client, registry, MissingWalletError } from 'checkers-client-ts'
 import { EventCreateGame } from "checkers-client-ts/checkers.checkers/types"
 import { EventMove } from "checkers-client-ts/checkers.checkers/types"
 import { EventRejectGame } from "checkers-client-ts/checkers.checkers/types"
+import { EventForfeitGame } from "checkers-client-ts/checkers.checkers/types"
 import { Params } from "checkers-client-ts/checkers.checkers/types"
 import { SystemInfo } from "checkers-client-ts/checkers.checkers/types"
 import { StoredGame } from "checkers-client-ts/checkers.checkers/types"
 
 
-export { EventCreateGame, EventMove, EventRejectGame, Params, SystemInfo, StoredGame };
+export { EventCreateGame, EventMove, EventRejectGame, EventForfeitGame, Params, SystemInfo, StoredGame };
 
 function initClient(vuexGetters) {
 	return new Client(vuexGetters['common/env/getEnv'], vuexGetters['common/wallet/signer'])
@@ -48,6 +49,7 @@ const getDefaultState = () => {
 						EventCreateGame: getStructure(EventCreateGame.fromPartial({})),
 						EventMove: getStructure(EventMove.fromPartial({})),
 						EventRejectGame: getStructure(EventRejectGame.fromPartial({})),
+						EventForfeitGame: getStructure(EventForfeitGame.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						SystemInfo: getStructure(SystemInfo.fromPartial({})),
 						StoredGame: getStructure(StoredGame.fromPartial({})),
@@ -229,19 +231,6 @@ export default {
 		},
 		
 		
-		async sendMsgRejectGame({ rootGetters }, { value, fee = [], memo = '' }) {
-			try {
-				const client=await initClient(rootGetters)
-				const result = await client.CheckersCheckers.tx.sendMsgRejectGame({ value, fee: {amount: fee, gas: "200000"}, memo })
-				return result
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgRejectGame:Init Could not initialize signing client. Wallet is required.')
-				}else{
-					throw new Error('TxClient:MsgRejectGame:Send Could not broadcast Tx: '+ e.message)
-				}
-			}
-		},
 		async sendMsgCreateGame({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const client=await initClient(rootGetters)
@@ -252,6 +241,19 @@ export default {
 					throw new Error('TxClient:MsgCreateGame:Init Could not initialize signing client. Wallet is required.')
 				}else{
 					throw new Error('TxClient:MsgCreateGame:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
+		async sendMsgRejectGame({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const client=await initClient(rootGetters)
+				const result = await client.CheckersCheckers.tx.sendMsgRejectGame({ value, fee: {amount: fee, gas: "200000"}, memo })
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgRejectGame:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgRejectGame:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
@@ -269,19 +271,6 @@ export default {
 			}
 		},
 		
-		async MsgRejectGame({ rootGetters }, { value }) {
-			try {
-				const client=initClient(rootGetters)
-				const msg = await client.CheckersCheckers.tx.msgRejectGame({value})
-				return msg
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgRejectGame:Init Could not initialize signing client. Wallet is required.')
-				} else{
-					throw new Error('TxClient:MsgRejectGame:Create Could not create message: ' + e.message)
-				}
-			}
-		},
 		async MsgCreateGame({ rootGetters }, { value }) {
 			try {
 				const client=initClient(rootGetters)
@@ -292,6 +281,19 @@ export default {
 					throw new Error('TxClient:MsgCreateGame:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgCreateGame:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgRejectGame({ rootGetters }, { value }) {
+			try {
+				const client=initClient(rootGetters)
+				const msg = await client.CheckersCheckers.tx.msgRejectGame({value})
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgRejectGame:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgRejectGame:Create Could not create message: ' + e.message)
 				}
 			}
 		},

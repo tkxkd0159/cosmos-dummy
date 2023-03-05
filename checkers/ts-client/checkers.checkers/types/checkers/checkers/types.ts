@@ -24,6 +24,7 @@ export interface StoredGame {
   /** Pertains to the FIFO. Toward tail */
   afterIndex: string;
   deadline: string;
+  winner: string;
 }
 
 function createBaseSystemInfo(): SystemInfo {
@@ -104,6 +105,7 @@ function createBaseStoredGame(): StoredGame {
     beforeIndex: "",
     afterIndex: "",
     deadline: "",
+    winner: "",
   };
 }
 
@@ -135,6 +137,9 @@ export const StoredGame = {
     }
     if (message.deadline !== "") {
       writer.uint32(74).string(message.deadline);
+    }
+    if (message.winner !== "") {
+      writer.uint32(82).string(message.winner);
     }
     return writer;
   },
@@ -173,6 +178,9 @@ export const StoredGame = {
         case 9:
           message.deadline = reader.string();
           break;
+        case 10:
+          message.winner = reader.string();
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -192,6 +200,7 @@ export const StoredGame = {
       beforeIndex: isSet(object.beforeIndex) ? String(object.beforeIndex) : "",
       afterIndex: isSet(object.afterIndex) ? String(object.afterIndex) : "",
       deadline: isSet(object.deadline) ? String(object.deadline) : "",
+      winner: isSet(object.winner) ? String(object.winner) : "",
     };
   },
 
@@ -206,6 +215,7 @@ export const StoredGame = {
     message.beforeIndex !== undefined && (obj.beforeIndex = message.beforeIndex);
     message.afterIndex !== undefined && (obj.afterIndex = message.afterIndex);
     message.deadline !== undefined && (obj.deadline = message.deadline);
+    message.winner !== undefined && (obj.winner = message.winner);
     return obj;
   },
 
@@ -220,6 +230,7 @@ export const StoredGame = {
     message.beforeIndex = object.beforeIndex ?? "";
     message.afterIndex = object.afterIndex ?? "";
     message.deadline = object.deadline ?? "";
+    message.winner = object.winner ?? "";
     return message;
   },
 };

@@ -47,7 +47,7 @@ const (
 const (
 	NoFifoIndex           = "-1"
 	MaxTurnDuration1Day   = time.Duration(24 * 3_600 * 1000_000_000)
-	MaxTurnDuration1Min   = time.Duration(5 * 60 * 1000_000_000)
+	MaxTurnDuration1Min   = time.Duration(1 * 60 * 1000_000_000)
 	DefaultDeadlineLayout = "2006-01-02 15:04:05.999999999 +0000 UTC"
 )
 
