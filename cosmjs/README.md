@@ -16,4 +16,12 @@ curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/a
 curl https://raw.githubusercontent.com/googleapis/googleapis/master/google/api/http.proto -o ./proto/google/api/http.proto
 mkdir -p ./proto/gogoproto
 curl https://raw.githubusercontent.com/cosmos/gogoproto/v1.4.4/gogoproto/gogo.proto -o ./proto/gogoproto/gogo.proto
+
+# compile
+mkdir -p client/src/types/generated
+find ./proto -name "*.proto" | xargs -I {} ./node_modules/protoc/protoc/bin/protoc \
+  --plugin="./node_modules/.bin/protoc-gen-ts_proto" \
+  --ts_proto_out="./client/src/types/generated" \
+  --proto_path="./proto" \
+  --ts_proto_opt="esModuleInterop=true,forceLong=long,useOptionals=messages" {}
 ```
