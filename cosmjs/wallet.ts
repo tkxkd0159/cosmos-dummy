@@ -1,19 +1,30 @@
-import {readFile} from "fs/promises";
+import {readFile, writeFile} from "fs/promises";
 import { DirectSecp256k1HdWallet, DirectSecp256k1Wallet, AccountData, OfflineDirectSigner } from "@cosmjs/proto-signing"
 import { stringToPath, HdPath } from "@cosmjs/crypto";
 import { fromHex } from "@cosmjs/encoding"
 
-const isGen = false
+const isGen = true
 
-const generateKey = async (): Promise<AccountData> => {
+const generateKey = async (keypath: string): Promise<AccountData> => {
     const wallet: DirectSecp256k1HdWallet = await DirectSecp256k1HdWallet.generate(24)
-    process.stdout.write(wallet.mnemonic)
+    console.log(`Mnemonic: ${wallet.mnemonic}`)
+
+    let encrypedWallet = await wallet.serialize("random")
+    await writeFile(keypath, encrypedWallet, { encoding: 'utf8' })
+
+    let loadEncrypedWallet = await readFile(keypath, { encoding: 'utf8' })
+    let decryptedWallet = await DirectSecp256k1HdWallet.deserialize(loadEncrypedWallet, "random")
+    console.log(`Deserialized Wallet: ${decryptedWallet.mnemonic}`)
+
     const accounts = await wallet.getAccounts()
     return accounts[0]
 }
 
 if (isGen) {
-    generateKey().then(r => {
+    const keydir = "keys"
+    const keyname = "dummy"
+    const keypath = `${keydir}/${keyname}.key`
+    generateKey(keypath).then(r => {
     console.error(`\n${r.algo}, Key: ${r.pubkey}`)
     console.log(`Address: ${r.address}`)
 })
