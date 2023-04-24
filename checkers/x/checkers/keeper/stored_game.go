@@ -172,12 +172,14 @@ func (k Keeper) ForfeitExpiredGames(ctx sdk.Context) {
 				storedGame.Board = ""
 				k.SetStoredGame(ctx, storedGame)
 			}
-			ctx.EventManager().EmitTypedEvent(
+			if err := ctx.EventManager().EmitTypedEvent(
 				&types.EventForfeitGame{
 					GameIndex: gameIndex,
 					Winner:    storedGame.Winner,
 					Board:     lastBoard,
-				})
+				}); err != nil {
+				panic(err)
+			}
 
 			// Move along FIFO
 			gameIndex = systemInfo.FifoHeadIndex

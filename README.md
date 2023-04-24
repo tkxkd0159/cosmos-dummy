@@ -58,7 +58,15 @@ ignite chain serve # chain init + start node
                    # Initialize the node with a single validator(first account), Add accounts based on config.yml
 
 # Production
-ignite chain build [--skip-proto] [--output dist]
+ignite chain build \
+    --release.targets linux:amd64 \
+    --release.targets linux:arm64 \
+    --release.targets darwin:amd64 \
+    --release.targets darwin:arm64 \
+    --output ./release \
+    --release
+
+cd release && sha256sum -c release_checksum
 
 # GUI
 cd vue
