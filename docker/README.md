@@ -1,6 +1,6 @@
 # Setup
 ```shell
-docker build -f Dockerfile-ubuntu --build-arg BUILDARCH=amd64 -t iignite .
+docker build -f Dockerfile-ubuntu -t iignite .
 docker run --rm -it iignite ignite version # check version after install
 docker run --rm -it -v $(pwd):/app -w /app iignite ignite scaffold chain <project_gomod_name>
 
