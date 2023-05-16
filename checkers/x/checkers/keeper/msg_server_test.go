@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	keepertest "checkers/testutil/keeper"
 	"checkers/x/checkers"
 	"checkers/x/checkers/keeper"
 	"checkers/x/checkers/testutil"
@@ -34,7 +33,7 @@ type MsgSrvTestSuite struct {
 
 // Initialize genesis & Create first game
 func (suite *MsgSrvTestSuite) SetupTest() {
-	k, ctx := keepertest.CheckersKeeper(suite.T())
+	k, ctx := testutil.CheckersKeeper(suite.T())
 	checkers.InitGenesis(ctx, *k, *types.DefaultGenesis())
 	suite.k = *k
 	suite.msgSrv = keeper.NewMsgServerImpl(*k)
@@ -44,6 +43,7 @@ func (suite *MsgSrvTestSuite) SetupTest() {
 		Creator: alice,
 		Black:   bob,
 		Red:     carol,
+		Wager:   45,
 	})
 }
 
@@ -64,6 +64,7 @@ func (suite *MsgSrvTestSuite) TestCreate1GameHasSaved() {
 		Creator: alice,
 		Black:   bob,
 		Red:     carol,
+		Wager:   50,
 	})
 	systemInfo, found := suite.k.GetSystemInfo(sdk.UnwrapSDKContext(suite.ctx))
 	require.True(suite.T(), found)
@@ -82,8 +83,9 @@ func (suite *MsgSrvTestSuite) TestCreate1GameHasSaved() {
 		Red:         carol,
 		BeforeIndex: "-1",
 		AfterIndex:  "2",
-		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Deadline:    "0001-01-01 00:01:00 +0000 UTC",
 		Winner:      "*",
+		Wager:       45,
 	}, game1)
 }
 
@@ -93,6 +95,7 @@ func (suite *MsgSrvTestSuite) TestCreate1GameEmitted() {
 		Creator: alice,
 		Black:   bob,
 		Red:     carol,
+		Wager:   50,
 	})
 	require.NotNil(suite.T(), ctx)
 	events := sdk.StringifyEvents(ctx.EventManager().ABCIEvents())
@@ -104,10 +107,12 @@ func (suite *MsgSrvTestSuite) TestCreate1GameEmitted() {
 			{Key: "creator", Value: "\"cosmos1jmjfq0tplp9tmx4v9uemw72y4d2wa5nr3xn9d3\""},
 			{Key: "game_index", Value: "\"1\""},
 			{Key: "red", Value: "\"cosmos1e0w5t53nrq7p66fye6c8p0ynyhf6y24l4yuxd7\""},
+			{Key: "wager", Value: "\"45\""},
 			{Key: "black", Value: "\"cosmos1xyxs3skf3f4jfqeuv89yyaqvjc6lffavxqhc8g\""},
 			{Key: "creator", Value: "\"cosmos1jmjfq0tplp9tmx4v9uemw72y4d2wa5nr3xn9d3\""}, // by func
 			{Key: "game_index", Value: "\"2\""},
 			{Key: "red", Value: "\"cosmos1e0w5t53nrq7p66fye6c8p0ynyhf6y24l4yuxd7\""},
+			{Key: "wager", Value: "\"50\""},
 		}},
 	}).Flatten(), events)
 }
@@ -188,7 +193,7 @@ func (suite *MsgSrvTestSuite) TestPlayMoveSavedGame() {
 		MoveCount:   1,
 		BeforeIndex: "-1",
 		AfterIndex:  "-1",
-		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Deadline:    "0001-01-01 00:01:00 +0000 UTC",
 		Winner:      "*",
 	}, game1)
 }
@@ -313,7 +318,7 @@ func (suite *MsgSrvTestSuite) TestPlayMove2SavedGame() {
 		MoveCount:   2,
 		BeforeIndex: "-1",
 		AfterIndex:  "-1",
-		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Deadline:    "0001-01-01 00:01:00 +0000 UTC",
 		Winner:      "*",
 	}, game1)
 }
@@ -395,7 +400,7 @@ func (suite *MsgSrvTestSuite) TestPlayMove3SavedGame() {
 		MoveCount:   3,
 		BeforeIndex: "-1",
 		AfterIndex:  "-1",
-		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Deadline:    "0001-01-01 00:01:00 +0000 UTC",
 		Winner:      "*",
 	}, game1)
 }
@@ -468,12 +473,14 @@ func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
 		Creator: alice,
 		Black:   bob,
 		Red:     carol,
+		Wager:   1,
 	})
 
 	msgSrvr.CreateGame(goCtx, &types.MsgCreateGame{
 		Creator: bob,
 		Black:   carol,
 		Red:     alice,
+		Wager:   2,
 	})
 	systemInfo2, found := keeper.GetSystemInfo(ctx)
 	require.True(t, found)
@@ -493,8 +500,9 @@ func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "-1",
 		AfterIndex:  "2",
-		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Deadline:    "0001-01-01 00:01:00 +0000 UTC",
 		Winner:      "*",
+		Wager:       45,
 	}, game1)
 	game2, found := keeper.GetStoredGame(ctx, "2")
 	require.True(t, found)
@@ -507,8 +515,9 @@ func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "1",
 		AfterIndex:  "3",
-		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Deadline:    "0001-01-01 00:01:00 +0000 UTC",
 		Winner:      "*",
+		Wager:       1,
 	}, game2)
 
 	msgSrvr.CreateGame(goCtx, &types.MsgCreateGame{
@@ -534,8 +543,9 @@ func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "-1",
 		AfterIndex:  "2",
-		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Deadline:    "0001-01-01 00:01:00 +0000 UTC",
 		Winner:      "*",
+		Wager:       45,
 	}, game1)
 	game2, found = keeper.GetStoredGame(ctx, "2")
 	require.True(t, found)
@@ -548,8 +558,9 @@ func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "1",
 		AfterIndex:  "3",
-		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Deadline:    "0001-01-01 00:01:00 +0000 UTC",
 		Winner:      "*",
+		Wager:       1,
 	}, game2)
 	game3, found := keeper.GetStoredGame(ctx, "3")
 	require.True(t, found)
@@ -562,8 +573,9 @@ func (suite *MsgSrvTestSuite) TestCreate3GamesHasSavedFifo() {
 		MoveCount:   uint64(0),
 		BeforeIndex: "2",
 		AfterIndex:  "4",
-		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Deadline:    "0001-01-01 00:01:00 +0000 UTC",
 		Winner:      "*",
+		Wager:       2,
 	}, game3)
 }
 
@@ -614,7 +626,7 @@ func (suite *MsgSrvTestSuite) TestPlayMove2Games2MovesHasSavedFifo() {
 		MoveCount:   uint64(1),
 		BeforeIndex: "-1",
 		AfterIndex:  "2",
-		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Deadline:    "0001-01-01 00:01:00 +0000 UTC",
 		Winner:      "*",
 	}, game1)
 	game2, found := keeper.GetStoredGame(ctx, "2")
@@ -628,7 +640,7 @@ func (suite *MsgSrvTestSuite) TestPlayMove2Games2MovesHasSavedFifo() {
 		MoveCount:   uint64(1),
 		BeforeIndex: "1",
 		AfterIndex:  "-1",
-		Deadline:    "0001-01-01 00:05:00 +0000 UTC",
+		Deadline:    "0001-01-01 00:01:00 +0000 UTC",
 		Winner:      "*",
 	}, game2)
 }
@@ -674,6 +686,7 @@ func (suite *MsgSrvTestSuite) TestRejectMiddleGameHasSavedFifo() {
 		AfterIndex:  "3",
 		Deadline:    types.FormatDeadline(ctx.BlockTime().Add(types.MaxTurnDuration1Min)),
 		Winner:      "*",
+		Wager:       45,
 	}, game1)
 	game3, found := keeper.GetStoredGame(ctx, "3")
 	require.True(t, found)

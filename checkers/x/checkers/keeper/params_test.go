@@ -3,9 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	testkeeper "checkers/testutil/keeper"
-	"checkers/x/checkers/types"
 	"github.com/stretchr/testify/require"
+
+	testkeeper "checkers/x/checkers/testutil"
+	"checkers/x/checkers/types"
 )
 
 func TestGetParams(t *testing.T) {

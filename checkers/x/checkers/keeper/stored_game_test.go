@@ -8,10 +8,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	keepertest "checkers/testutil/keeper"
 	"checkers/testutil/nullify"
 	"checkers/x/checkers"
 	"checkers/x/checkers/keeper"
+	keepertest "checkers/x/checkers/testutil"
 	"checkers/x/checkers/types"
 )
 

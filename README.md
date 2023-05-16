@@ -50,7 +50,7 @@ ignite generate proto-go
 ```
 
 ```shell
-# 개발용. config.yml 조절을 통해 초기 상태를 제어할 수 있음
+# 개발용. config.yml 조절을 통해 초기 상태를 제어할 수 있고 validator node 1개로 띄움
 # <name>d로 go install 
 ignite chain init  # production에서는 바이너리 직접 빌드 후 init, add-genesis-account, gentx, collect-gentx를 수동으로 진행하는 것을 추천
 ignite chain serve # chain init + start node

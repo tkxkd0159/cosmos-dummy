@@ -10,9 +10,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	testkeeper "checkers/testutil/keeper"
 	"checkers/testutil/nullify"
 
+	testkeeper "checkers/x/checkers/testutil"
 	"checkers/x/checkers/types"
 )
 

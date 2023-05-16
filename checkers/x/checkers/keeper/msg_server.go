@@ -44,6 +44,7 @@ func (k msgServer) CreateGame(goCtx context.Context, msg *types.MsgCreateGame) (
 		AfterIndex:  types.NoFifoIndex,
 		Deadline:    types.FormatDeadline(types.GetNextDeadline(ctx)),
 		Winner:      rules.PieceStrings[rules.NO_PLAYER],
+		Wager:       msg.Wager,
 	}
 
 	err := storedGame.Validate()
@@ -62,6 +63,7 @@ func (k msgServer) CreateGame(goCtx context.Context, msg *types.MsgCreateGame) (
 			GameIndex: newIndex,
 			Black:     msg.Black,
 			Red:       msg.Red,
+			Wager:     msg.Wager,
 		})
 
 	return &types.MsgCreateGameResponse{
@@ -102,6 +104,11 @@ func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*typ
 		return nil, sdkerrors.Wrapf(types.ErrNotPlayerTurn, "%s", player)
 	}
 
+	err = k.Keeper.CollectWager(ctx, &storedGame)
+	if err != nil {
+		return nil, err
+	}
+
 	captured, moveErr := game.Move(
 		rules.Pos{
 			X: int(msg.FromX),
@@ -129,6 +136,7 @@ func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*typ
 	} else {
 		k.Keeper.RemoveFromFifo(ctx, &storedGame, &systemInfo)
 		storedGame.Board = ""
+		k.Keeper.MustPayWinnings(ctx, &storedGame)
 	}
 
 	storedGame.MoveCount++
@@ -176,6 +184,8 @@ func (k msgServer) RejectGame(goCtx context.Context, msg *types.MsgRejectGame) (
 	} else {
 		return nil, sdkerrors.Wrapf(types.ErrCreatorNotPlayer, "%s", msg.Creator)
 	}
+
+	k.Keeper.MustRefundWager(ctx, &storedGame)
 
 	systemInfo, found := k.Keeper.GetSystemInfo(ctx)
 	if !found {

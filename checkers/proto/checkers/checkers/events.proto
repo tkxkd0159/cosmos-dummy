@@ -8,6 +8,7 @@ message EventCreateGame {
   string game_index = 2;
   string black = 3;
   string red = 4;
+  uint64 wager = 5;
 }
 
 message EventMove {

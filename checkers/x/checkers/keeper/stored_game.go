@@ -164,11 +164,15 @@ func (k Keeper) ForfeitExpiredGames(ctx sdk.Context) {
 			if storedGame.MoveCount <= 1 {
 				// No point in keeping a game that was never really played
 				k.RemoveStoredGame(ctx, gameIndex)
+				if storedGame.MoveCount == 1 {
+					k.MustRefundWager(ctx, &storedGame)
+				}
 			} else {
 				storedGame.Winner, found = opponents[storedGame.Turn]
 				if !found {
 					panic(fmt.Sprintf(types.ErrCannotFindWinnerByColor.Error(), storedGame.Turn))
 				}
+				k.MustPayWinnings(ctx, &storedGame)
 				storedGame.Board = ""
 				k.SetStoredGame(ctx, storedGame)
 			}

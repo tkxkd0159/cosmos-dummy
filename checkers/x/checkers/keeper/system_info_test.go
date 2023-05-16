@@ -6,9 +6,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	keepertest "checkers/testutil/keeper"
 	"checkers/testutil/nullify"
 	"checkers/x/checkers/keeper"
+	"checkers/x/checkers/testutil"
 	"checkers/x/checkers/types"
 )
 
@@ -19,7 +19,7 @@ func createTestSystemInfo(keeper *keeper.Keeper, ctx sdk.Context) types.SystemIn
 }
 
 func TestSystemInfoGet(t *testing.T) {
-	keeper, ctx := keepertest.CheckersKeeper(t)
+	keeper, ctx := testutil.CheckersKeeper(t)
 	item := createTestSystemInfo(keeper, ctx)
 	rst, found := keeper.GetSystemInfo(ctx)
 	require.True(t, found)
@@ -30,7 +30,7 @@ func TestSystemInfoGet(t *testing.T) {
 }
 
 func TestSystemInfoRemove(t *testing.T) {
-	keeper, ctx := keepertest.CheckersKeeper(t)
+	keeper, ctx := testutil.CheckersKeeper(t)
 	createTestSystemInfo(keeper, ctx)
 	keeper.RemoveSystemInfo(ctx)
 	_, found := keeper.GetSystemInfo(ctx)
